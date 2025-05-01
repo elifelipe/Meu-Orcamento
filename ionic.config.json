@@ -1,0 +1,7 @@
+{
+  "name": "orcamento",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
