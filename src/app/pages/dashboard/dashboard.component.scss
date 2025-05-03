@@ -1,0 +1,129 @@
+
+/* Aplica o padding vertical desejado diretamente no ion-content */
+ion-content {
+  --padding-top: 70px;
+  --padding-bottom: 50px;
+
+  /* Se você NÃO estiver usando a classe 'ion-padding' no ion-content no HTML,
+     adicione também o padding lateral aqui, se desejar: */
+  /* --padding-start: 16px; */
+  /* --padding-end: 16px; */
+}
+
+/* --- Restante dos seus estilos (combinados e ajustados) --- */
+
+.logo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px; /* Espaçamento abaixo da seção do logo */
+  /* O padding vertical agora é controlado pelo ion-content */
+}
+
+.logo-avatar-container {
+  width: 100px; /* Tamanho do container do avatar */
+  height: 100px; /* Tamanho do container do avatar */
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--ion-color-medium-tint, #ddd); /* Borda sutil */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--ion-color-light, #f4f4f4); /* Fundo claro */
+}
+
+/* Estilo para o ion-avatar dentro do container */
+.logo-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex; /* Para centralizar o ícone/imagem interno */
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Garante que a imagem cubra o avatar */
+    border-radius: 50%; /* Garante que a imagem em si seja redonda */
+}
+
+.logo-avatar ion-icon {
+    font-size: 48px; /* Tamanho do ícone placeholder */
+    color: var(--ion-color-medium, #999); /* Cor do ícone placeholder */
+}
+
+.logo-actions {
+  display: flex;
+  gap: 10px; /* Espaço entre os botões de ação do logo */
+}
+
+/* Estilos do Card */
+ion-card {
+  max-width: 800px; /* Largura máxima do card */
+  margin-left: auto;  /* Centraliza o card */
+  margin-right: auto; /* Centraliza o card */
+  margin-top: 0;      /* Remove margem superior, padding do ion-content cuida disso */
+  margin-bottom: 20px; /* Adiciona espaço abaixo do card, antes do fim do padding */
+
+  ion-card-header {
+    padding-bottom: 0; /* Remove padding extra do header do card */
+  }
+}
+
+/* Alinha título e botão de edição */
+ion-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Empurra o botão para a direita */
+  font-size: 1.1em; /* Ajuste o tamanho do título se necessário */
+  /* Adiciona um padding interno se necessário */
+  /* padding-right: 8px;  */
+}
+
+/* Estilos dos Itens e Notas dentro do form */
+ion-item {
+  --padding-start: 0; /* Remove padding inicial padrão do item */
+  --inner-padding-end: 0; /* Remove padding final interno padrão do item */
+  --border-color: var(--ion-color-light-shade); /* Cor da linha divisória */
+  margin-bottom: 12px; /* Espaço entre os itens */
+}
+
+ion-note {
+  font-size: 1rem; /* Tamanho da fonte para os dados exibidos (era 16px) */
+  color: var(--ion-color-dark, #222); /* Cor mais escura para melhor leitura */
+  display: block; /* Garante que ocupe a linha */
+  width: 100%;
+  padding-top: 4px; /* Pequeno espaço após o label */
+  padding-bottom: 4px; /* Pequeno espaço antes do próximo item */
+}
+
+/* Estilos das Ações do Formulário (Salvar/Cancelar) */
+.form-actions {
+  margin-top: 24px; /* Espaço acima dos botões */
+  padding-top: 16px; /* Espaço interno acima dos botões */
+  border-top: 1px solid var(--ion-color-light-shade); /* Linha divisória */
+  display: flex;
+  gap: 12px; /* Espaço entre os botões */
+
+  ion-button {
+    flex: 1; /* Faz os botões dividirem o espaço */
+  }
+}
+
+/* Ajustes Responsivos (Exemplo) */
+@media (min-width: 768px) {
+  .logo-section {
+    flex-direction: row; /* Logo e ações lado a lado */
+    justify-content: center; /* Centraliza na horizontal */
+    gap: 24px; /* Espaço entre avatar e botões */
+  }
+
+  .logo-actions {
+    flex-direction: column; /* Botões um abaixo do outro */
+    align-items: flex-start; /* Alinha botões à esquerda */
+    gap: 8px; /* Espaço entre botões na vertical */
+  }
+}

@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'orcamento',
+  appId: 'com.elftech.app',
+  appName: 'Meu Orçamento',
   webDir: 'www'
 };
 

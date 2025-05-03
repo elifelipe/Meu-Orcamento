@@ -1,0 +1,70 @@
+.bottom-nav-bar {
+  position: fixed; // Fixa na viewport
+  bottom: 0;      // Alinha na parte inferior
+  left: 0;        // Alinha na esquerda
+  right: 0;       // Estica pela largura
+  z-index: 10;    // Garante que fique acima de outros conteúdos
+  width: 100%;    // Ocupa 100% da largura
+  display: flex;  // Usa flexbox para distribuir os botões
+  justify-content: space-around; // Distribui espaço uniformemente
+  align-items: center; // Centraliza itens verticalmente
+  background-color: var(--ion-background-color, #fff); // Cor de fundo usando variável Ionic ou branco
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.1); // Adiciona uma sombra sutil na parte superior
+  padding-bottom: env(safe-area-inset-bottom); // Considera a área segura inferior (para iPhones com notch/barra)
+  // Reduz a altura base de 56px para 50px
+  height: calc(50px + env(safe-area-inset-bottom)); // Ajusta a altura para incluir a área segura
+
+  // Estilo para os botões individuais
+  mat-button-toggle {
+    flex-grow: 1; // Permite que os botões cresçam e preencham o espaço
+    // Reduz a altura base do botão
+    height: 50px; // Altura base dos botões (excluindo área segura)
+    display: flex; // Usa flexbox para alinhar conteúdo interno
+    flex-direction: column; // Empilha ícone e label verticalmente
+    justify-content: center; // Centraliza conteúdo verticalmente
+    align-items: center;    // Centraliza conteúdo horizontalmente
+    padding: 0 -20px; // Ajusta o padding horizontal (reduzido de 4px para 2px)
+    border: none !important; // Remove bordas padrão do button toggle
+    text-transform: none; // Evita texto em caixa alta
+    font-size: 10px; // Ajusta o tamanho da fonte para mobile
+    color: var(--ion-color-medium, #929292); // Cor padrão usando variável Ionic
+    min-width: 0; // Permite que os botões diminuam mais se necessário
+    opacity: 0.8; // Opacidade para botões inativos
+
+    ion-icon {
+        font-size: 20px; // Ajusta o tamanho do ícone (reduzido de 22px para 20px)
+        margin-bottom: 1px; // Espaço entre ícone e label (reduzido de 2px para 1px)
+    }
+
+    // Estilo para o botão ativo
+    &.active-button-toggle { // Classe adicionada por routerLinkActive
+      color: var(--ion-color-primary, #3880ff); // Cor de destaque para o botão ativo
+      background-color: transparent; // Garante fundo transparente
+      opacity: 1; // Opacidade total para o botão ativo
+      font-weight: bold; // Opcional: deixa o texto ativo em negrito
+    }
+
+    // Estilo para o efeito ripple (toque)
+    .mat-button-toggle-ripple {
+      color: var(--ion-color-primary, #3880ff); // Cor do ripple usando variável Ionic
+      opacity: 0.2; // Ajusta a opacidade do ripple
+    }
+  }
+
+  // Garante que o grupo de botões ocupe a largura total
+  .mat-button-toggle-group {
+    width: 100%;
+    border: none; // Remove borda do grupo, se houver
+  }
+}
+
+/* Ajusta a área de conteúdo para não ficar escondida pela barra inferior */
+/* Alvo a classe main-content adicionada ao ion-router-outlet */
+.main-content {
+    // Adiciona padding inferior igual à altura da barra de navegação
+    // Considera a área segura inferior
+    & > * { // Alvo o filho direto (seu componente de página)
+        // Ajusta o padding inferior para a nova altura base
+        padding-bottom: calc(50px + env(safe-area-inset-bottom)); // Padding = nova altura base + área segura
+    }
+}

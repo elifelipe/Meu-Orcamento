@@ -1,0 +1,100 @@
+<ion-header>
+  <ion-toolbar color="primary"> <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Clientes</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding"> <div *ngIf="isLoading" class="loading-indicator">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Carregando...</p>
+  </div>
+
+  <ion-card *ngIf="showAddClientForm" class="add-client-card">
+    <ion-card-header>
+      <ion-card-title>Adicionar Novo Cliente</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item lines="full">
+        <ion-label position="floating">Nome do Cliente*</ion-label>
+        <ion-input [(ngModel)]="newClientName" required clearInput="true"></ion-input>
+      </ion-item>
+      <ion-item lines="full">
+        <ion-label position="floating">Telefone</ion-label>
+        <ion-input [(ngModel)]="newClientPhone" type="tel" clearInput="true" inputmode="tel"></ion-input>
+      </ion-item>
+      <ion-item lines="none"> <ion-label position="floating">Email</ion-label>
+        <ion-input [(ngModel)]="newClientEmail" type="email" clearInput="true" inputmode="email"></ion-input>
+      </ion-item>
+      <div class="form-buttons ion-padding-top">
+        <ion-button expand="block" (click)="addClient()" [disabled]="!newClientName?.trim()">
+          <ion-icon name="save-outline" slot="start"></ion-icon>
+          Salvar Cliente
+        </ion-button>
+        <ion-button expand="block" fill="outline" color="medium" (click)="toggleAddClientForm(false)">
+           <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+          Cancelar
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <div *ngIf="!isLoading && !showAddClientForm"> <ion-list *ngIf="clientes.length > 0; else noClients" lines="none"> <ion-item-sliding *ngFor="let cliente of clientes" #slidingItem>
+        <ion-item lines="none" class="client-item"> <ion-card class="client-card">
+            <ion-card-header>
+              <ion-card-title>{{ cliente.nome }}</ion-card-title>
+              <ion-card-subtitle>
+                <span *ngIf="cliente.telefone">{{ cliente.telefone }}</span>
+                <span *ngIf="cliente.telefone && cliente.email"> | </span>
+                <span *ngIf="cliente.email">{{ cliente.email }}</span>
+                <span *ngIf="!cliente.telefone && !cliente.email"><i>Sem informações de contato</i></span>
+              </ion-card-subtitle>
+            </ion-card-header>
+
+            <ion-card-content>
+              <h6 class="pdf-list-title" *ngIf="cliente.pdfs.length > 0">Orçamentos Vinculados:</h6>
+              <p *ngIf="cliente.pdfs.length === 0"><i>Nenhum orçamento vinculado.</i></p>
+
+              <ion-list *ngIf="cliente.pdfs.length > 0" class="pdf-list" lines="full">
+                <ion-item *ngFor="let pdf of cliente.pdfs" class="pdf-item">
+                  <ion-icon name="document-attach-outline" slot="start" color="medium"></ion-icon>
+                  <ion-label class="ion-text-wrap">
+                    {{ pdf.fileName }}
+                  </ion-label>
+                  <ion-button slot="end" fill="clear" size="small" (click)="openPdf(pdf)" title="Abrir PDF">
+                    <ion-icon slot="icon-only" name="open-outline"></ion-icon>
+                     </ion-button>
+                  <ion-button slot="end" fill="clear" size="small" (click)="sharePdf(pdf)" title="Compartilhar PDF">
+                    <ion-icon slot="icon-only" name="share-outline"></ion-icon>
+                     </ion-button>
+                </ion-item>
+              </ion-list>
+
+            </ion-card-content>
+          </ion-card>
+        </ion-item>
+
+        <ion-item-options side="end">
+          <ion-item-option color="danger" expandable (click)="confirmRemoveClient(cliente, slidingItem)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            Excluir
+          </ion-item-option>
+        </ion-item-options>
+
+      </ion-item-sliding>
+    </ion-list>
+
+    <ng-template #noClients>
+      <div class="empty-state ion-text-center ion-padding" *ngIf="!isLoading"> <ion-icon name="people-outline" size="large" color="medium"></ion-icon>
+        <p>Nenhum cliente cadastrado ainda.</p>
+        <p>Clique no botão '+' para adicionar o primeiro cliente.</p>
+      </div>
+    </ng-template>
+  </div> <ion-fab *ngIf="!showAddClientForm" slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="toggleAddClientForm(true)" title="Adicionar Novo Cliente">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>

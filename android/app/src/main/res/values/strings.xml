@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Meu Orçamento</string>
+    <string name="title_activity_main">Meu Orçamento</string>
+    <string name="package_name">com.elftech.app</string>
+    <string name="custom_url_scheme">com.elftech.app</string>
+    <string name="admob_app_id">ca-app-pub-8781801467559084~3266542143</string>
+</resources>

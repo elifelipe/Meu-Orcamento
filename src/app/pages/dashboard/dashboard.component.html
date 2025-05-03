@@ -1,0 +1,195 @@
+<ion-app>
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Dados da Empresa</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content class="ion-padding">
+    <div class="logo-section">
+      <input
+        type="file"
+        id="logo-upload-input"
+        accept="image/*"
+        (change)="onFileSelected($event)"
+        style="display: none"
+      >
+      <div class="logo-avatar-container" (click)="triggerLogoUpload()">
+        <ion-avatar class="logo-avatar">
+          @if (logoUrl) {
+            <img [src]="logoUrl" alt="Logo da Empresa" />
+          } @else {
+            <ion-icon name="camera-outline"></ion-icon>
+          }
+        </ion-avatar>
+      </div>
+
+
+      <div class="logo-actions">
+        <ion-button fill="clear" color="medium" (click)="triggerLogoUpload()">
+          <ion-icon slot="start" name="camera-outline"></ion-icon>
+          Alterar Logo
+        </ion-button>
+        @if (logoUrl) {
+          <ion-button fill="clear" color="danger" (click)="removerLogo()">
+            <ion-icon slot="start" name="trash-outline"></ion-icon>
+            Remover
+          </ion-button>
+        }
+      </div>
+    </div>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title class="ion-align-items-center ion-justify-content-between">
+          Informações da Empresa
+          @if (!editandoDadosEmpresa) {
+            <ion-button fill="clear" (click)="editarDadosEmpresa()">
+              <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+            </ion-button>
+          }
+        </ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form>
+          <ion-list>
+            <ion-item>
+              <ion-label position="stacked">Nome da Empresa</ion-label>
+              @if (editandoDadosEmpresa) {
+                <ion-input [(ngModel)]="dadosEmpresa.nome" name="nome" required></ion-input>
+              } @else {
+                <ion-note>{{ dadosEmpresa.nome || 'Não informado' }}</ion-note>
+              }
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Endereço</ion-label>
+              @if (editandoDadosEmpresa) {
+                <ion-input [(ngModel)]="dadosEmpresa.endereco" name="endereco"></ion-input>
+              } @else {
+                <ion-note>{{ dadosEmpresa.endereco || 'Não informado' }}</ion-note>
+              }
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Cidade</ion-label>
+              @if (editandoDadosEmpresa) {
+                <ion-input [(ngModel)]="dadosEmpresa.cidade" name="cidade"></ion-input>
+              } @else {
+                <ion-note>{{ dadosEmpresa.cidade || 'Não informado' }}</ion-note>
+              }
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Estado</ion-label>
+              @if (editandoDadosEmpresa) {
+                <ion-input [(ngModel)]="dadosEmpresa.estado" name="estado"></ion-input>
+              } @else {
+                <ion-note>{{ dadosEmpresa.estado || 'Não informado' }}</ion-note>
+              }
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Telefone Principal</ion-label>
+              @if (editandoDadosEmpresa) {
+                <ion-input [(ngModel)]="dadosEmpresa.telefone1" name="telefone1" type="tel"></ion-input>
+              } @else {
+                <ion-note>{{ dadosEmpresa.telefone1 || 'Não informado' }}</ion-note>
+              }
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Telefone Secundário</ion-label>
+              @if (editandoDadosEmpresa) {
+                <ion-input [(ngModel)]="dadosEmpresa.telefone2" name="telefone2" type="tel"></ion-input>
+              } @else {
+                <ion-note>{{ dadosEmpresa.telefone2 || 'Não informado' }}</ion-note>
+              }
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">E-mail</ion-label>
+              @if (editandoDadosEmpresa) {
+                <ion-input [(ngModel)]="dadosEmpresa.email" name="email" type="email"></ion-input>
+              } @else {
+                <ion-note>{{ dadosEmpresa.email || 'Não informado' }}</ion-note>
+              }
+            </ion-item>
+          </ion-list>
+
+          @if (editandoDadosEmpresa) {
+            <div class="form-actions">
+              <ion-button expand="block" color="primary" (click)="salvarDadosEmpresa()">
+                <ion-icon slot="start" name="save-outline"></ion-icon>
+                Salvar Dados
+              </ion-button>
+              <ion-button expand="block" fill="outline" color="medium" (click)="editandoDadosEmpresa = false">
+                Cancelar
+              </ion-button>
+            </div>
+          }
+        </form>
+      </ion-card-content>
+    </ion-card>
+  </ion-content>
+</ion-app>
+
+<style>
+  .logo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .logo-avatar-container {
+    width: 100px; /* Adjust size as needed */
+    height: 100px; /* Adjust size as needed */
+    margin-bottom: 10px;
+    cursor: pointer; /* Indicate it's clickable */
+    border-radius: 50%; /* Make it round */
+    overflow: hidden; /* Ensure image stays within the round shape */
+    border: 1px solid #ddd; /* Optional border */
+    display: flex; /* Center the icon/image */
+    justify-content: center;
+    align-items: center;
+  }
+
+  .logo-avatar {
+     /* Ion-avatar itself */
+     width: 100%;
+     height: 100%;
+  }
+
+  .logo-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* Cover the container */
+  }
+
+  .logo-avatar ion-icon {
+      font-size: 48px; /* Adjust icon size */
+      color: #bbb; /* Adjust icon color */
+  }
+
+
+  .logo-actions {
+    display: flex;
+    gap: 10px; /* Space between buttons */
+  }
+
+  .form-actions {
+    margin-top: 20px;
+  }
+
+  ion-card-title {
+    display: flex;
+  }
+
+  /* Add some styling for the note text */
+  ion-note {
+    padding-top: 8px; /* Align better with label */
+    color: var(--ion-color-medium); /* Use a standard Ionic color */
+  }
+</style>

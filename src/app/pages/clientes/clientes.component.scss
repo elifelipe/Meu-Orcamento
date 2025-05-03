@@ -1,0 +1,160 @@
+// src/app/pages/clientes/clientes.component.scss
+
+// --- Global Styles for this Page ---
+ion-content {
+  // Add some padding around the content area
+  --padding-start: 10px;
+  --padding-end: 10px;
+  --padding-top: 70px;
+  // Adjusted bottom padding to visually account for the FAB's new position if needed
+  // Or keep it as is if the FAB should overlay content more
+  --padding-bottom: 70px;
+}
+
+// --- Loading Indicator ---
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 60vh; // Take up significant vertical space
+  text-align: center;
+  color: var(--ion-color-medium-shade);
+
+  ion-spinner {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+  }
+}
+
+// --- Add Client Form ---
+.add-client-card {
+  margin-bottom: 20px; // Space below the form card
+
+  ion-item {
+    --padding-start: 0; // Remove default padding for better alignment within card
+    --inner-padding-end: 0;
+  }
+
+  .form-buttons {
+    // Add space between buttons
+    ion-button:not(:last-child) {
+      margin-bottom: 10px;
+    }
+  }
+}
+
+// --- Client List & Cards ---
+ion-list {
+  background: transparent; // Make list background transparent if content has padding
+}
+
+// Remove margin from the sliding item itself
+ion-item-sliding {
+  margin-bottom: 10px; // Add space between client items
+  border-radius: 8px; // Rounded corners for the sliding container
+  overflow: hidden; // Clip corners
+}
+
+// Style the visible item within the slider
+.client-item {
+  --padding-start: 0; // Remove padding as the card will handle it
+  --inner-padding-end: 0;
+  --border-radius: 8px; // Match sliding container
+
+  // Remove the default item background to show the card's background
+  --background: transparent;
+}
+
+.client-card {
+  width: 100%; // Make card take full width of the item
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 0;
+  margin-bottom: 0; // Remove card margins as spacing is handled by ion-item-sliding
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); // Subtle shadow
+
+  ion-card-header {
+    padding-bottom: 8px; // Adjust spacing
+  }
+
+  ion-card-content {
+    padding-top: 8px; // Adjust spacing
+
+    .pdf-list-title {
+      font-size: 0.9em;
+      font-weight: 500;
+      color: var(--ion-color-medium-shade);
+      margin-bottom: 5px;
+      margin-top: 10px; // Space above the PDF list title
+    }
+
+    .pdf-list {
+      padding-top: 0;
+      padding-bottom: 0;
+
+      .pdf-item {
+        --min-height: 40px; // Make PDF items a bit smaller
+        --inner-padding-bottom: 5px;
+        --inner-padding-top: 5px;
+
+        ion-label {
+          font-size: 0.9em;
+          color: var(--ion-color-dark-tint);
+        }
+
+        ion-button {
+          --padding-start: 4px;
+          --padding-end: 4px;
+          height: 28px; // Smaller buttons
+          margin-left: 4px; // Space between buttons
+
+          ion-icon {
+             font-size: 1.1em; // Adjust icon size if needed
+          }
+        }
+      }
+    }
+  }
+}
+
+// --- Empty State ---
+.empty-state {
+  margin-top: 30px;
+  color: var(--ion-color-medium);
+
+  ion-icon {
+    font-size: 4em; // Larger icon for empty state
+    margin-bottom: 10px;
+  }
+
+  p {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    font-size: 1.1em;
+  }
+}
+
+// --- FAB ---
+ion-fab {
+  // Standard positioning is bottom/end by default via slot="fixed" vertical="bottom" horizontal="end"
+  // Override the bottom position
+  bottom: 65px !important; // Move 50px up from the bottom edge. Use !important if needed to override Ionic defaults.
+  right: 20px;
+  // You might also need to adjust right/end positioning if desired
+  // right: 20px; // Example
+}
+
+// --- Sliding Options ---
+ion-item-option {
+  // Ensure text is visible if icon-only isn't used on wider screens
+  // display: flex;
+  // flex-direction: column;
+  // justify-content: center;
+  // align-items: center;
+
+  ion-icon {
+     // font-size: 1.5em; // Adjust icon size if needed
+  }
+}

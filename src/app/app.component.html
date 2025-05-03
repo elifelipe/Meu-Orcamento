@@ -1,3 +1,16 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+  <ion-router-outlet class="main-content"></ion-router-outlet>
+
+  <mat-button-toggle-group
+    class="bottom-nav-bar"
+    appearance="legacy"
+    [value]="activeLink"> <mat-button-toggle
+      *ngFor="let link of navLinks"
+      [value]="link.path"
+      [routerLink]="link.path"
+      routerLinkActive="active-button-toggle">
+      <ion-icon [name]="link.icon" aria-hidden="true"></ion-icon>
+      {{ link.label }}
+    </mat-button-toggle>
+  </mat-button-toggle-group>
 </ion-app>
