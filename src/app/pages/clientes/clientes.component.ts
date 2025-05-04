@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+// src/app/clientes/clientes.component.ts
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core'; // Added ViewChild
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -7,7 +8,6 @@ import {
   IonToolbar,
   IonTitle,
   IonButton,
-  IonInput,
   IonItem,
   IonLabel,
   IonList,
@@ -19,33 +19,48 @@ import {
   IonIcon,
   IonButtons,
   IonBackButton,
+  IonSpinner,
+  IonItemSliding,
+  IonItemOptions,
+  IonItemOption,
   IonFab,
   IonFabButton,
-  IonSpinner, // Added for loading indicator
-  IonItemSliding, // Added for slide-to-delete option
-  IonItemOptions, // Added for slide-to-delete option
-  IonItemOption   // Added for slide-to-delete option
+  IonSearchbar // Added IonSearchbar
 } from '@ionic/angular/standalone';
 import { FileOpener } from '@capacitor-community/file-opener';
 import { Share } from '@capacitor/share';
 import { Dialog } from '@capacitor/dialog';
 import { addIcons } from 'ionicons';
-import { documentAttachOutline, shareOutline, addOutline, trashOutline, closeCircleOutline, createOutline, saveOutline, openOutline, peopleOutline } from 'ionicons/icons'; // Added trash, close, edit icons
+import { documentAttachOutline, shareOutline, trashOutline, closeCircleOutline, openOutline, peopleOutline } from 'ionicons/icons';
 
 // Import the service and interfaces
 import { ClientesService, Cliente, ClientePdfInfo } from '../../services/clientes.service';
-import { Subscription } from 'rxjs'; // If using Observables later
 
-// Add icons used in the template
-addIcons({ documentAttachOutline, shareOutline, addOutline, trashOutline, closeCircleOutline, createOutline });
+// Add necessary icons
+addIcons({ documentAttachOutline, shareOutline, trashOutline, closeCircleOutline, openOutline, peopleOutline });
+
+// Re-define DadosEmpresa interface locally if not imported/shared globally
+// It's better to have this in a shared location, but for this snippet:
+interface DadosEmpresa {
+  nome: string;
+  endereco?: string; // Optional fields based on OrcamentoComponent
+  cidade?: string;
+  estado?: string;
+  telefone1?: string;
+  telefone2?: string;
+  email?: string;
+}
 
 
 @Component({
   selector: 'app-clientes',
-  templateUrl: './clientes.component.html',
-  styleUrls: ['./clientes.component.scss'], // Link the SCSS file
+  templateUrl: './clientes.component.html', // Assume template is updated to pass 'cliente' to sharePdf
+  styleUrls: ['./clientes.component.scss'],
   standalone: true,
   imports: [
+    IonSearchbar, // Added IonSearchbar
+    IonFabButton,
+    IonFab,
     CommonModule,
     FormsModule,
     IonHeader,
@@ -62,105 +77,93 @@ addIcons({ documentAttachOutline, shareOutline, addOutline, trashOutline, closeC
     IonCardContent,
     IonButton,
     IonIcon,
-    IonInput,
     IonButtons,
     IonBackButton,
-    IonFab,
-    IonFabButton,
-    IonSpinner, // Added
-    IonItemSliding, // Added
-    IonItemOptions, // Added
-    IonItemOption   // Added
+    IonSpinner,
+    IonItemSliding,
+    IonItemOptions,
+    IonItemOption
   ],
 })
 export class ClientesComponent implements OnInit, OnDestroy {
-  clientes: Cliente[] = [];
+  allClientes: Cliente[] = []; // Stores the full list of clients
+  filteredClientes: Cliente[] = []; // Stores the list displayed (filtered)
   isLoading = false; // Flag for loading indicator
-  showAddClientForm = false;
-  newClientName: string = '';
-  newClientPhone: string = '';
-  newClientEmail: string = '';
+  searchTerm: string = ''; // Holds the current search term
 
-  // Optional: Subscription management if using observables
-  // private clientesSubscription: Subscription | undefined;
+  // Optional: Get reference to the searchbar if needed later
+  // @ViewChild(IonSearchbar) searchbar: IonSearchbar | undefined;
 
   constructor(private clientesService: ClientesService) {
-      // Icons are added globally via addIcons now
-      addIcons({saveOutline,closeCircleOutline,documentAttachOutline,openOutline,shareOutline,trashOutline,peopleOutline,addOutline});
+      // Icons already added globally
+      addIcons({documentAttachOutline,openOutline,shareOutline,trashOutline,peopleOutline});
   }
 
   ngOnInit() {
     console.log('ClientesComponent ngOnInit');
-    // Don't await here, let ionViewWillEnter handle initial load
-    // to ensure it loads every time the view becomes active.
+    // Initial load handled by ionViewWillEnter
   }
 
   ngOnDestroy() {
-    // Unsubscribe if using observables
-    // this.clientesSubscription?.unsubscribe();
+    // Cleanup if needed
   }
 
-  // Using IonViewWillEnter to refresh the list when navigating back to this page
   async ionViewWillEnter() {
       console.log('ClientesComponent ionViewWillEnter - refreshing list');
+      // Clear search term on view entry if desired, or keep it persistent
+      // this.searchTerm = '';
       await this.loadClientes();
+      // Apply filter if search term exists from previous state
+      this.filterClients();
   }
 
   async loadClientes(forceReload: boolean = false): Promise<void> {
-    this.isLoading = true; // Show spinner
+    this.isLoading = true;
+    this.filteredClientes = []; // Clear filtered list while loading
+    if (forceReload) {
+        this.allClientes = []; // Clear main list only on forced reload
+    }
     try {
-        // Call the service method (add forceReload if implemented in service)
-        this.clientes = await this.clientesService.loadClientes(); // Assuming service handles caching or reloading logic
-        console.log(`Clientes loaded in component: ${this.clientes.length}`);
+        // Load the full list into allClientes
+        this.allClientes = await this.clientesService.loadClientes(forceReload);
+        // Initially, the filtered list is the same as the full list
+        this.filterClients(); // Apply current search term (might be empty)
+        console.log(`Clientes loaded in component: ${this.allClientes.length}`);
     } catch (error) {
         console.error("Error loading clients in component:", error);
         await this.mostrarAlerta('Erro', 'Não foi possível carregar a lista de clientes.');
-        this.clientes = []; // Ensure it's an empty array on error
-    } finally {
-        this.isLoading = false; // Hide spinner regardless of success/failure
-    }
-  }
-
-  toggleAddClientForm(show?: boolean) {
-    this.showAddClientForm = show !== undefined ? show : !this.showAddClientForm;
-    // Reset form fields when hiding
-    if (!this.showAddClientForm) {
-      this.newClientName = '';
-      this.newClientPhone = '';
-      this.newClientEmail = '';
-    }
-  }
-
-  async addClient() {
-    if (!this.newClientName?.trim()) {
-      await this.mostrarAlerta('Aviso', 'O nome do cliente é obrigatório.');
-      return;
-    }
-    this.isLoading = true; // Indicate activity
-    try {
-        const addedClient = await this.clientesService.addClient({
-          nome: this.newClientName,
-          telefone: this.newClientPhone,
-          email: this.newClientEmail
-        });
-
-        if (addedClient) {
-             // Refresh list to show the new client
-            await this.loadClientes(true); // Force reload might be needed if service caches aggressively
-            this.toggleAddClientForm(false); // Hide the form on success
-        }
-        // If addedClient is null, the service likely showed an alert (e.g., duplicate)
-    } catch (error) {
-        console.error("Error adding client:", error);
-        await this.mostrarAlerta('Erro', 'Não foi possível adicionar o cliente.');
+        this.allClientes = [];
+        this.filteredClientes = [];
     } finally {
         this.isLoading = false;
     }
   }
 
+  // --- Search Functionality ---
+  handleSearchInput(event: any): void {
+    const query = event.target.value.toLowerCase();
+    this.searchTerm = query;
+    this.filterClients();
+  }
+
+  filterClients(): void {
+    if (!this.searchTerm || this.searchTerm.trim() === '') {
+      // If search is empty, show all clients
+      this.filteredClientes = [...this.allClientes];
+    } else {
+      // Filter based on client name (case-insensitive)
+      this.filteredClientes = this.allClientes.filter(cliente =>
+        cliente.nome.toLowerCase().includes(this.searchTerm.toLowerCase())
+      );
+    }
+    console.log(`Filtering complete. Showing ${this.filteredClientes.length} of ${this.allClientes.length} clients.`);
+  }
+  // --- End Search Functionality ---
+
+
   async confirmRemoveClient(client: Cliente, slidingItem?: IonItemSliding): Promise<void> {
      if (slidingItem) {
-       await slidingItem.close(); // Close the sliding item before showing dialog
+       await slidingItem.close();
      }
 
      if (!client || !client.id) {
@@ -184,7 +187,6 @@ export class ClientesComponent implements OnInit, OnDestroy {
          }
      } catch (e) {
          console.error("Error displaying confirmation dialog:", e);
-         // Handle cases where the dialog might fail (less common)
      }
   }
 
@@ -194,25 +196,16 @@ export class ClientesComponent implements OnInit, OnDestroy {
           const success = await this.clientesService.removeClient(client);
           if (success) {
               console.log(`Client ${client.nome} successfully removed from service.`);
-              // Refresh the local list *after* successful removal
-              // Find the client in the local array and remove it directly for faster UI update
-              const index = this.clientes.findIndex(c => c.id === client.id);
-              if (index > -1) {
-                  this.clientes.splice(index, 1);
-              } else {
-                  // If not found locally (shouldn't happen often), reload fully
-                  await this.loadClientes(true);
-              }
-              await this.mostrarAlerta('Sucesso', `Cliente "${client.nome}" excluído.`); // Optional success message
-          } else {
-              console.warn(`Service indicated failure removing client ${client.nome}.`);
-              // Service should have shown an error alert if needed
-              // Optionally show a generic failure message here if the service doesn't always alert
-              // await this.mostrarAlerta('Falha', 'Não foi possível remover o cliente.');
+              // Remove from both lists
+              this.allClientes = this.allClientes.filter(c => c.id !== client.id);
+              this.filterClients(); // Re-apply filter to update the displayed list
+              // Optional success message
+              // await this.mostrarAlerta('Sucesso', `Cliente "${client.nome}" excluído.`);
           }
-      } catch (error) {
+          // No else needed, service handles alerts on failure
+      } catch (error: any) { // Catch specific type if possible
           console.error(`Error removing client ${client.nome}:`, error);
-          await this.mostrarAlerta('Erro', `Ocorreu um erro ao tentar excluir o cliente: ${error}`);
+          await this.mostrarAlerta('Erro', `Ocorreu um erro ao tentar excluir o cliente: ${error.message || error}`);
       } finally {
           this.isLoading = false;
       }
@@ -226,17 +219,14 @@ export class ClientesComponent implements OnInit, OnDestroy {
           return;
       }
       try {
-          // Ensure the filePath uses the URI provided by Capacitor
           await FileOpener.open({
               filePath: pdfInfo.uri,
               contentType: 'application/pdf',
-              // openWithDefault: true // Optional: Try to force default app
           });
            console.log('FileOpener open call succeeded.');
       } catch (e: any) {
           console.error('Error opening PDF with FileOpener:', e);
           let errorMessage = 'Não foi possível abrir o arquivo PDF.';
-          // Provide more specific feedback if possible
           if (e.message?.includes('Activity not found') || e.message?.includes('No application found')) {
               errorMessage = 'Nenhum aplicativo encontrado para abrir arquivos PDF. Por favor, instale um visualizador de PDF.';
           } else if (e.message) {
@@ -246,34 +236,64 @@ export class ClientesComponent implements OnInit, OnDestroy {
       }
   }
 
-  async sharePdf(pdfInfo: ClientePdfInfo): Promise<void> {
-       console.log(`Attempting to share PDF: ${pdfInfo.uri}`);
+  // *** MODIFIED sharePdf function ***
+  async sharePdf(pdfInfo: ClientePdfInfo, cliente: Cliente): Promise<void> { // Added cliente parameter
+       console.log(`Attempting to share PDF: ${pdfInfo.uri} for client ${cliente?.nome}`);
        if (!pdfInfo.uri) {
            await this.mostrarAlerta('Erro', 'URI do PDF inválido ou ausente para compartilhamento.');
            return;
        }
+        if (!cliente) {
+            await this.mostrarAlerta('Erro', 'Informação do cliente ausente para compartilhamento.');
+            return;
+        }
+
+       // --- Prepare share data (similar to OrcamentosComponent) ---
+       const dadosEmpresaString = localStorage.getItem('dadosEmpresa');
+       let nomeEmpresa = 'Sua Empresa'; // Default company name
+       if (dadosEmpresaString) {
+           try {
+               const dadosEmpresa: DadosEmpresa = JSON.parse(dadosEmpresaString);
+               nomeEmpresa = dadosEmpresa.nome || nomeEmpresa;
+           } catch { /* ignore parsing error, use default */ }
+       }
+
+       // Extract the budget number from the filename (assuming format orcamento_NUMERO.pdf)
+       let numeroOrcamento = pdfInfo.fileName.replace('orcamento_', '').replace('.pdf', '');
+       const subject = `Orçamento Nº ${numeroOrcamento} - ${nomeEmpresa}`;
+
+       // Use template literals for easier formatting
+       const text = `Olá ${cliente.nome || 'Cliente'},
+
+Conforme solicitado, segue em anexo o orçamento Nº ${numeroOrcamento} (${pdfInfo.fileName}).
+
+Qualquer dúvida, estamos à disposição.
+
+Atenciosamente,
+${nomeEmpresa}`;
+
+
+       // --- Share ---
        try {
-         // Use the file URI directly with the Share plugin
+         console.log(`Attempting to share PDF via Share plugin: ${pdfInfo.uri}`);
          const shareResult = await Share.share({
-           title: `Orçamento: ${pdfInfo.fileName}`,
-           text: `Segue o orçamento ${pdfInfo.fileName}.`, // Customize text if needed
-           url: pdfInfo.uri, // Pass the file URI
+           title: subject,
+           text: text,
+           url: pdfInfo.uri, // Use the URI from Filesystem write/load result
            dialogTitle: 'Compartilhar Orçamento via...'
          });
-          console.log('Share dialog action completed. Result:', shareResult); // Result might be empty object {}
+          console.log('Share dialog action completed. Result:', shareResult);
        } catch (e: any) {
          console.error('Error sharing PDF:', e);
-         // Check for specific cancellation messages (these can vary by platform/plugin version)
          if (e.message?.includes('Share cancelled') || e.code === 'CANCELLED' || e.message?.includes('Activity was cancelled')) {
              console.log('Share cancelled by user.');
-             // Optionally notify user or just log: await this.mostrarAlerta('Cancelado', 'Compartilhamento cancelado.');
+             // Optionally inform user: await this.mostrarAlerta('Cancelado', 'Compartilhamento cancelado.');
          } else {
              await this.mostrarAlerta('Erro ao Compartilhar', `Não foi possível iniciar o compartilhamento. ${e.message || ''}`);
          }
        }
   }
 
-   // Helper for alerts
    async mostrarAlerta(titulo: string, mensagem: string): Promise<void> {
     try {
         await Dialog.alert({

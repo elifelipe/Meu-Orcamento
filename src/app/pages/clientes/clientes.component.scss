@@ -5,10 +5,25 @@ ion-content {
   // Add some padding around the content area
   --padding-start: 10px;
   --padding-end: 10px;
-  --padding-top: 70px;
+  --padding-top: 0px;
   // Adjusted bottom padding to visually account for the FAB's new position if needed
   // Or keep it as is if the FAB should overlay content more
   --padding-bottom: 70px;
+}
+
+.search-toolbar {
+  padding-top: 70px;
+}
+
+
+ion-title {
+  padding-top: 15px;
+  padding-bottom: 1px;
+}
+
+ion-back-button {
+  padding-top: 15px;
+  padding-bottom: 1px;
 }
 
 // --- Loading Indicator ---

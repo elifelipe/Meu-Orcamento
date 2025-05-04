@@ -1,18 +1,21 @@
-// --- Variáveis e Configurações (Mobile-First) ---
-$item-gap-mobile: 12px; // Gap entre elementos lado a lado
-$item-vertical-gap: 18px; // Gap entre linhas/pares empilhados
+// =======================================
+// Variáveis
+// =======================================
+$item-gap-mobile: 12px;
+$item-vertical-gap: 16px;
 $label-color: var(--ion-color-medium-shade);
-$input-border-color: var(--ion-color-step-200, #ccc); // Usado se input não for outline/solid
+$input-border-color: var(--ion-color-step-200, #ccc);
 $input-border-color-focus: var(--ion-color-primary);
-$input-bg-color: var(--ion-color-background, #fff);
-$header-font-weight: 600;
-$card-shadow: 0 2px 6px rgba(0, 0, 0, 0.07); // Sombra mais sutil
+$card-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
 $card-border-radius: 8px;
 
-// --- Estilos Globais e Conteúdo ---
-:host { display: block; }
+// =======================================
+// Layout Base
+// =======================================
+:host {
+  display: block;
+}
 
-// Ajustar padding global do conteúdo para mobile
 ion-content {
   --background: var(--ion-color-light, #f4f5f8);
   --padding-top: 70px;
@@ -21,143 +24,200 @@ ion-content {
   --padding-end: 12px;
 }
 
+// =======================================
+// Header
+// =======================================
+ion-title,
+ion-back-button {
+  padding-top: 15px;
+  padding-bottom: 2px;
+}
+
+// =======================================
+// Cards
+// =======================================
 ion-card {
-  margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 20px; // Espaço entre cards
-  box-shadow: $card-shadow; border-radius: $card-border-radius; background: var(--ion-card-background, #fff); overflow: visible;
-  &:last-of-type { margin-bottom: 0; }
-  ion-card-header { padding-bottom: 4px; padding-top: 14px; } // Ajusta padding header
-  ion-card-title { font-size: 1.1em; font-weight: $header-font-weight; color: var(--ion-color-dark-shade); }
-  ion-card-content { padding-top: 10px; padding-bottom: 16px;} // Ajusta padding content
-}
+  margin: 0 0 20px;
+  box-shadow: $card-shadow;
+  border-radius: $card-border-radius;
+  background: var(--ion-card-background, #fff);
 
-ion-list { padding: 0; background: transparent; }
-ion-list[lines="full"] ion-item:last-child, ion-list[lines="inset"] ion-item:last-child { --inner-border-width: 0; }
+  &:last-of-type {
+    margin-bottom: 0;
+  }
 
-ion-item {
-  --border-color: var(--ion-color-step-150, #e9e9e9);
-  // Remover paddings padrão do item, controlaremos no wrapper interno ou nos inputs
-  --padding-start: 0; --inner-padding-start: 0; --inner-padding-end: 0; --padding-end: 0;
-  background: transparent; // Fundo transparente
-  --min-height: auto; // Altura automática
-}
+  ion-card-header {
+    padding: 14px 16px 6px;
+  }
 
-// --- Header (Toolbar com Botões) ---
-ion-header {
-  // Remover sombra se não quiser
-  // box-shadow: none;
-  ion-toolbar {
-    ion-title { font-weight: $header-font-weight; font-size: 1.1em; }
-    ion-buttons ion-button { --padding-start: 6px; --padding-end: 6px; text-transform: none; }
+  ion-card-title {
+    font-size: 1.05em;
+    font-weight: 600;
+    color: var(--ion-color-dark-shade);
+  }
+
+  ion-card-content {
+    padding: 0 16px 18px;
   }
 }
 
-// --- Card: Informações Cliente ---
+// =======================================
+// Cliente — Formulário
+// =======================================
 .client-info-card {
   ion-item {
-    --padding-start: 16px; // Padding lateral para itens do cliente
+    --padding-start: 16px;
     --padding-end: 16px;
-    background: transparent;
   }
-  ion-label[position="stacked"], ion-label[position="floating"] { font-size: 0.8em; font-weight: 500; color: $label-color; }
-  ion-input { font-size: 1em; --padding-bottom: 8px; --padding-top: 8px; }
+
+  ion-label[position="stacked"],
+  ion-label[position="floating"] {
+    font-size: 0.85em;
+    font-weight: 500;
+    color: $label-color;
+  }
+
+  ion-input {
+    font-size: 1em;
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+  }
 }
 
-// --- Card: Itens do Orçamento (Layout Mobile Direto) ---
-.budget-items-card {
+// =======================================
+// Itens do Orçamento
+// =======================================
+.budget-item-header-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  font-weight: 600;
+  color: var(--ion-color-medium);
+  border-bottom: 1px solid var(--ion-color-step-200, #ddd);
+  margin-bottom: 8px;
+  font-size: 0.85em;
 
-  // Header da Lista de Itens - ESCONDIDO (Mobile-Only App)
-  .item-header {
-    display: none;
+  .header-label {
+    padding: 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  // Linha/Container de cada Item Orçamento
-  .budget-item-row {
-      --border-width: 0; // Sem linha divisória entre itens
-      margin-bottom: 14px; // Espaço entre os blocos de item
-      background-color: var(--ion-background-color, #fff); // Fundo branco para cada item
-      border-radius: $card-border-radius;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06); // Sombra bem sutil por item
-      // Remover padding do ion-item pai
-      --inner-padding-start: 0; --inner-padding-end: 0; --padding-start: 0; --padding-end: 0;
-  }
+  // Definições de tamanho das colunas
+  .header-label:nth-child(1) { flex: 0 0 60px; text-align: center; }
+  .header-label:nth-child(2) { flex: 1 1 auto; text-align: left; min-width: 120px; }
+  .header-label:nth-child(3) { flex: 0 0 130px; text-align: right; }
+  .header-label:nth-child(4) { flex: 0 0 150px; text-align: right; }
+  .header-actions-spacer { flex: 0 0 44px; }
+}
 
-  // Wrapper Interno (Layout Coluna: Pares + Botão)
+.budget-item-row {
+  display: flex;
+  flex-direction: column;
+  gap: $item-gap-mobile;
+  margin-bottom: $item-vertical-gap;
+
   .item-content-wrapper {
-      display: flex;
-      flex-direction: column;   // Layout vertical principal
-      align-items: stretch;     // Estica os pares/botão
-      gap: $item-vertical-gap; // Espaço entre os pares e o botão
-      padding: 14px 10px;      // Padding interno do bloco do item
-      width: 100%;
-      box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  // Estilo dos Pares (Layout Linha: Inputs Lado a Lado)
   .item-row-pair {
-      display: flex;
-      flex-direction: row;      // Inputs lado a lado
-      align-items: flex-start;    // Alinha inputs modernos pelo topo
-      gap: $item-gap-mobile;    // Espaço entre inputs no par
-  }
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
 
-  // Estilo dos Inputs DENTRO dos Pares
-  .item-row-pair ion-input {
-      margin: 0;              // Sem margens extras
-      min-height: 50px;       // Altura mínima para toque
-      // Estilo foco (opcional, Ionic pode cuidar disso)
-      // &.has-focus { ... }
-  }
+    mat-form-field {
+      flex: 1 1 auto;
+      --padding: 0;
 
-  // Dimensionamento/Alinhamento Inputs nos Pares
-  .input-qtd { flex: 0 0 70px; text-align: center; }
-  .input-desc { flex: 1 1 auto; min-width: 80px; }
-  .input-unit { flex: 1 1 50%; text-align: right; }
-  .input-total {
-      flex: 1 1 50%; text-align: right;
-      &[readonly] { // Estilo Total Readonly
-         --background: transparent; --border-color: transparent; --inner-padding-end: 0; padding-right: 0; font-weight: 600; align-self: center; min-height: auto; // Altura auto se não for input editável
-         --padding-top: 8px; --padding-bottom: 8px; // Padding normal se não usar label flutuante
+      .mat-form-field-wrapper {
+        padding-bottom: 0;
       }
-   }
 
-  // Botão Remover (Abaixo dos pares)
-  .item-actions-button {
-      align-self: flex-end; // Alinha botão à direita
-      flex-grow: 0; flex-shrink: 0; flex-basis: auto;
-      height: 38px; width: 38px; // Botão pequeno e redondo
-      margin-top: 5px; // Pequeno espaço acima
+      .mat-form-field-infix {
+        min-height: 48px;
+      }
+
+      &.input-qtd {
+        flex: 0 0 60px;
+      }
+
+      &.input-desc {
+        flex: 1 1 auto;
+      }
+
+      &.input-valor.input-unit {
+        flex: 0 0 130px;
+        text-align: right;
+      }
+
+      &.input-valor.input-total {
+        flex: 0 0 150px;
+        text-align: right;
+      }
+    }
   }
 
-  // Botão Adicionar Item
-  .add-item-button {
-    margin: 10px 0 5px 0; // Margem ajustada
-    --border-radius: 6px; height: 44px; font-weight: 500;
+  .item-actions-inline {
+    flex: 0 0 44px;
+    display: flex;
+    justify-content: flex-end;
+
+    ion-button {
+      --border-radius: 6px;
+      --padding-start: 0;
+      --padding-end: 0;
+      height: 48px;
+    }
   }
+}
 
-} // Fim .budget-items-card
-
-// --- Card: Totais e Ações ---
+// =======================================
+// Totais e Ações
+// =======================================
 .totals-actions-card {
-  background: transparent; // Sem fundo de card para totais/ações
-  box-shadow: none;      // Sem sombra
-  margin-top: 10px;      // Espaço acima da seção total
+  background: transparent;
+  box-shadow: none;
+  margin-top: 14px;
 
   .total-section {
-     // Layout vertical e alinhado à direita para total
-     display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
-     padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--ion-color-step-200, #ccc);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--ion-color-step-200, #ccc);
   }
-  .total-label { font-size: 0.9em; color: $label-color; font-weight: 500; }
-  .total-value { font-size: 1.5em; font-weight: 700; color: var(--ion-color-primary-shade); }
 
-  // Botões de Ação
+  .total-label {
+    font-size: 0.9em;
+    color: $label-color;
+    font-weight: 500;
+  }
+
+  .total-value {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: var(--ion-color-primary-shade);
+  }
+
   .action-buttons {
-    display: flex; flex-direction: column; gap: 12px;
-    ion-button { margin: 0; --border-radius: 6px; height: 48px; font-weight: 500; } // Botões maiores
-    .view-pdf-button { --box-shadow: 0 4px 8px rgba(var(--ion-color-success-rgb), 0.3); } // Destaque botão principal
-    .new-budget-button { --border-width: 1.5px; }
-  }
-} // Fim .totals-actions-card
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 
-// --- FIM DO ARQUIVO SCSS ---
-// Nenhuma @media query é necessária pois é mobile-only
+    ion-button {
+      --border-radius: 6px;
+      height: 48px;
+      font-weight: 500;
+    }
+  }
+}
+
+// =======================================
+// Fim
+// =======================================

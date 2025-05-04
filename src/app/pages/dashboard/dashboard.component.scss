@@ -1,129 +1,159 @@
-
-/* Aplica o padding vertical desejado diretamente no ion-content */
+/* =========================================
+   ESTILOS GERAIS DE PADDING DO CONTEÚDO
+========================================= */
 ion-content {
   --padding-top: 70px;
   --padding-bottom: 50px;
-
-  /* Se você NÃO estiver usando a classe 'ion-padding' no ion-content no HTML,
-     adicione também o padding lateral aqui, se desejar: */
-  /* --padding-start: 16px; */
-  /* --padding-end: 16px; */
 }
 
-/* --- Restante dos seus estilos (combinados e ajustados) --- */
+/* =========================================
+   TÍTULO DA PÁGINA
+========================================= */
+ion-title {
+  padding-top: 15px;
+  padding-bottom: 1px;
+}
 
+/* =========================================
+   SEÇÃO DE LOGO
+========================================= */
 .logo-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 20px; /* Espaçamento abaixo da seção do logo */
-  /* O padding vertical agora é controlado pelo ion-content */
+  margin-bottom: 20px;
 }
 
 .logo-avatar-container {
-  width: 100px; /* Tamanho do container do avatar */
-  height: 100px; /* Tamanho do container do avatar */
+  width: 100px;
+  height: 100px;
   margin-bottom: 10px;
   cursor: pointer;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid var(--ion-color-medium-tint, #ddd); /* Borda sutil */
+  border: 1px solid var(--ion-color-medium-tint, #ddd);
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--ion-color-light, #f4f4f4); /* Fundo claro */
+  background-color: var(--ion-color-light, #f4f4f4);
 }
 
-/* Estilo para o ion-avatar dentro do container */
 .logo-avatar {
   width: 100%;
   height: 100%;
-  display: flex; /* Para centralizar o ícone/imagem interno */
+  display: flex;
   align-items: center;
   justify-content: center;
-}
 
-.logo-avatar img {
+  img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Garante que a imagem cubra o avatar */
-    border-radius: 50%; /* Garante que a imagem em si seja redonda */
-}
+    object-fit: cover;
+    border-radius: 50%;
+  }
 
-.logo-avatar ion-icon {
-    font-size: 48px; /* Tamanho do ícone placeholder */
-    color: var(--ion-color-medium, #999); /* Cor do ícone placeholder */
+  ion-icon {
+    font-size: 48px;
+    color: var(--ion-color-medium, #999);
+  }
 }
 
 .logo-actions {
   display: flex;
-  gap: 10px; /* Espaço entre os botões de ação do logo */
+  gap: 10px;
 }
 
-/* Estilos do Card */
+/* =========================================
+   CARD DO FORMULÁRIO
+========================================= */
 ion-card {
-  max-width: 800px; /* Largura máxima do card */
-  margin-left: auto;  /* Centraliza o card */
-  margin-right: auto; /* Centraliza o card */
-  margin-top: 0;      /* Remove margem superior, padding do ion-content cuida disso */
-  margin-bottom: 20px; /* Adiciona espaço abaixo do card, antes do fim do padding */
+  max-width: 800px;
+  margin: 0 auto 20px;
 
   ion-card-header {
-    padding-bottom: 0; /* Remove padding extra do header do card */
+    padding-bottom: 0;
   }
 }
 
-/* Alinha título e botão de edição */
 ion-card-title {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Empurra o botão para a direita */
-  font-size: 1.1em; /* Ajuste o tamanho do título se necessário */
-  /* Adiciona um padding interno se necessário */
-  /* padding-right: 8px;  */
+  justify-content: space-between;
+  font-size: 1.1em;
 }
 
-/* Estilos dos Itens e Notas dentro do form */
-ion-item {
-  --padding-start: 0; /* Remove padding inicial padrão do item */
-  --inner-padding-end: 0; /* Remove padding final interno padrão do item */
-  --border-color: var(--ion-color-light-shade); /* Cor da linha divisória */
-  margin-bottom: 12px; /* Espaço entre os itens */
-}
+/* =========================================
+   FORMULÁRIO DE DETALHES DA EMPRESA
+========================================= */
+.company-details-form {
+  ion-item {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    --border-color: var(--ion-color-light-shade);
+    margin-bottom: 1px;
+  }
 
-ion-note {
-  font-size: 1rem; /* Tamanho da fonte para os dados exibidos (era 16px) */
-  color: var(--ion-color-dark, #222); /* Cor mais escura para melhor leitura */
-  display: block; /* Garante que ocupe a linha */
-  width: 100%;
-  padding-top: 4px; /* Pequeno espaço após o label */
-  padding-bottom: 4px; /* Pequeno espaço antes do próximo item */
-}
-
-/* Estilos das Ações do Formulário (Salvar/Cancelar) */
-.form-actions {
-  margin-top: 24px; /* Espaço acima dos botões */
-  padding-top: 16px; /* Espaço interno acima dos botões */
-  border-top: 1px solid var(--ion-color-light-shade); /* Linha divisória */
-  display: flex;
-  gap: 12px; /* Espaço entre os botões */
-
-  ion-button {
-    flex: 1; /* Faz os botões dividirem o espaço */
+  ion-note {
+    font-size: 1rem;
+    color: var(--ion-color-dark, #222);
+    display: block;
+    width: 100%;
+    padding: 4px 0;
   }
 }
 
-/* Ajustes Responsivos (Exemplo) */
+/* Estados de exibição */
+.modo-edicao {
+  ion-input,
+  ion-textarea {
+    background-color: var(--ion-color-light, #fafafa);
+    border-radius: 6px;
+    padding: 4px 8px;
+  }
+}
+
+.modo-visualizacao {
+  ion-input[readonly],
+  ion-textarea[readonly] {
+    background-color: transparent;
+  }
+}
+
+/* Campo obrigatório */
+.campo-obrigatorio {
+  color: var(--ion-color-danger);
+  font-weight: bold;
+  margin-left: 4px;
+}
+
+/* =========================================
+   AÇÕES DO FORMULÁRIO (Salvar / Cancelar)
+========================================= */
+.form-actions {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ion-color-light-shade);
+  display: flex;
+  gap: 12px;
+
+  ion-button {
+    flex: 1;
+  }
+}
+
+/* =========================================
+   RESPONSIVO
+========================================= */
 @media (min-width: 768px) {
   .logo-section {
-    flex-direction: row; /* Logo e ações lado a lado */
-    justify-content: center; /* Centraliza na horizontal */
-    gap: 24px; /* Espaço entre avatar e botões */
+    flex-direction: row;
+    justify-content: center;
+    gap: 24px;
   }
 
   .logo-actions {
-    flex-direction: column; /* Botões um abaixo do outro */
-    align-items: flex-start; /* Alinha botões à esquerda */
-    gap: 8px; /* Espaço entre botões na vertical */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }

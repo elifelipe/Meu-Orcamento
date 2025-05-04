@@ -3,6 +3,9 @@ import { Component, OnInit } from '@angular/core';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { CommonModule } from '@angular/common';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+
 import {
   IonContent,
   IonHeader,
@@ -28,13 +31,13 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
-// Removed Dialog import as it's now handled by the service
+// Dialog import is not needed here as it's handled by the service
 
 // Import the Clientes Service and its interfaces
 import { ClientesService, ClientePdfInfo, Cliente } from '../../services/clientes.service';
 
 
-// Definições de interfaces (Mantenha aqui ou mova para um arquivo compartilhado)
+// Definições de interfaces
 interface DadosEmpresa {
   nome: string;
   endereco: string;
@@ -56,9 +59,9 @@ interface Orcamento {
   numero: string;
   data: string;
   dataVencimento: string;
-  cliente: string; // Keep client info here
-  telefone: string; // Keep client info here
-  email: string; // Keep client info here
+  cliente: string;
+  telefone: string;
+  email: string;
   itens: ItemOrcamento[];
   valorTotal: number;
 }
@@ -94,6 +97,8 @@ interface FileInfo {
     IonCardHeader,
     IonCardTitle,
     IonButtons,
+    MatFormFieldModule,
+    MatInputModule,
     IonBackButton
   ],
 })
@@ -118,7 +123,7 @@ export class OrcamentosComponent implements OnInit {
 
     this.orcamento.numero = this.formatarNumeroOrcamento(this.proximoNumero);
 
-    // You might want to pre-load clients here as well, although the service handles lazy loading
+    // Optional: Pre-load clients if needed, though service handles lazy loading
     // await this.clientesService.loadClientes();
 
     console.log('OrcamentosComponent ngOnInit finished');
@@ -146,6 +151,7 @@ export class OrcamentosComponent implements OnInit {
     const dia = String(data.getDate()).padStart(2, '0');
     const mes = String(data.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
     const ano = data.getFullYear();
+    // Ensure LaTeX format is not used here if it's meant for display, adjust if needed
     return `${dia}/${mes}/${ano}`;
   }
 
@@ -161,31 +167,6 @@ export class OrcamentosComponent implements OnInit {
       valorUnitario: 0,
       valorTotal: 0,
     };
-  }
-
-  async salvarOrcamento(): Promise<void> {
-    console.log(`Tentando salvar orçamento Nº: ${this.orcamento.numero}`);
-    try {
-      // Cria uma chave única para este orçamento no localStorage
-      const chaveStorage = `orcamento_${this.orcamento.numero}`;
-
-      // Converte o objeto orcamento para uma string JSON
-      const orcamentoString = JSON.stringify(this.orcamento);
-
-      // Salva no localStorage
-      localStorage.setItem(chaveStorage, orcamentoString);
-
-      console.log(`Orçamento Nº ${this.orcamento.numero} salvo com sucesso no localStorage.`);
-
-      // Mostra uma mensagem de sucesso para o usuário usando o serviço
-      // (Opcional, mas bom para UX)
-      await this.clientesService.mostrarAlerta('Sucesso', `Orçamento Nº ${this.orcamento.numero} salvo localmente.`);
-
-    } catch (error: any) {
-      console.error(`Erro ao salvar orçamento Nº ${this.orcamento.numero}:`, error);
-      // Mostra uma mensagem de erro
-      await this.clientesService.mostrarAlerta('Erro ao Salvar', `Não foi possível salvar o orçamento. Detalhes: ${error.message || error}`);
-    }
   }
 
   adicionarItem(): void {
@@ -211,11 +192,15 @@ export class OrcamentosComponent implements OnInit {
         const itemTotal = Number(item.valorTotal) || 0;
         return total + itemTotal;
     }, 0);
-}
+  }
 
 
   novoOrcamento(): void {
-    // Prompt user if they want to clear the current budget? (Optional UX improvement)
+    // Consider adding a confirmation dialog before clearing
+    // import { Dialog } from '@capacitor/dialog';
+    // const { value } = await Dialog.confirm({ title: 'Novo Orçamento', message: 'Deseja limpar o formulário atual e iniciar um novo orçamento?', okButtonTitle: 'Sim', cancelButtonTitle: 'Não'});
+    // if (!value) return;
+
     this.proximoNumero++;
     localStorage.setItem('proximoNumeroOrcamento', this.proximoNumero.toString());
     this.orcamento = this.inicializarOrcamento();
@@ -227,7 +212,7 @@ export class OrcamentosComponent implements OnInit {
   private async savePdfToFile(): Promise<FileInfo | undefined> {
       const doc = new jsPDF();
 
-      // --- Load company data and logo from localStorage ---
+      // --- Load company data and logo ---
       const dadosEmpresaString = localStorage.getItem('dadosEmpresa');
       const logoBase64 = localStorage.getItem('logoEmpresa');
       let dadosEmpresa: DadosEmpresa | null = null;
@@ -237,39 +222,30 @@ export class OrcamentosComponent implements OnInit {
               dadosEmpresa = JSON.parse(dadosEmpresaString);
           } catch (e) {
               console.error("Erro ao parsear dados da empresa do localStorage:", e);
-              // Use the service's alert
               await this.clientesService.mostrarAlerta('Erro', 'Não foi possível carregar os dados da empresa.');
               return undefined;
           }
       } else {
-          // Use the service's alert
           await this.clientesService.mostrarAlerta('Aviso', 'Dados da empresa não configurados. Por favor, configure na tela de Dados da Empresa.');
-          console.warn("Dados da empresa não encontrados no localStorage.");
-          // Use placeholder data if not configured
-          dadosEmpresa = { nome: 'Nome da Empresa', endereco: 'Endereço da Empresa', cidade: 'Cidade', estado: 'Estado', telefone1: '(XX) XXXX-XXXX', telefone2: '', email: 'email@empresa.com.br' };
+          // Use placeholder data or return
+          return undefined; // Or use placeholder: dadosEmpresa = { ... };
       }
 
-      // Add Logo (if exists and is valid base64)
-      if (logoBase64) {
+      // --- Add Logo ---
+      if (logoBase64 && logoBase64.startsWith('data:image')) {
         try {
-           if (logoBase64.startsWith('data:image')) {
-             // Adjust position and size as needed
-             doc.addImage(logoBase64, 'PNG', 10, 10, 30, 30);
-           } else {
-             console.warn("Logo salvo não parece ser uma string base64 válida.");
-           }
+           doc.addImage(logoBase64, 'PNG', 10, 10, 30, 30); // Adjust position/size
         } catch (e) {
            console.error('Error adding logo to PDF:', e);
+           // Don't fail the whole process for a logo error
         }
-      } else {
-          console.log("Nenhum logo encontrado no localStorage.");
       }
 
-      // Add Company Info
+      // --- Add Company Info ---
       doc.setFontSize(12);
-      const companyInfoStartX = logoBase64 ? 50 : 10; // Start text right of logo if logo exists
+      const companyInfoStartX = logoBase64 && logoBase64.startsWith('data:image') ? 50 : 10;
       const companyInfoStartY = 20;
-      const lineHeight = 6; // Space between lines
+      const lineHeight = 6;
 
       if (dadosEmpresa) {
           doc.text(`Empresa: ${dadosEmpresa.nome || 'N/A'}`, companyInfoStartX, companyInfoStartY);
@@ -278,25 +254,24 @@ export class OrcamentosComponent implements OnInit {
           const telefones = [dadosEmpresa.telefone1, dadosEmpresa.telefone2].filter(Boolean).join(' / ');
           doc.text(`Telefone: ${telefones || 'N/A'}`, companyInfoStartX, companyInfoStartY + 3 * lineHeight);
           doc.text(`E-mail: ${dadosEmpresa.email || 'N/A'}`, companyInfoStartX, companyInfoStartY + 4 * lineHeight);
-      } else {
-          doc.text('Dados da Empresa: Não configurado', companyInfoStartX, companyInfoStartY);
       }
 
-      // Add Budget Details
-      const budgetDetailsStartY = Math.max(companyInfoStartY + 5 * lineHeight, 60); // Ensure space after company info, or start lower if company info was short
+      // --- Add Budget Details ---
+      const budgetDetailsStartY = Math.max(companyInfoStartY + 5 * lineHeight, 60); // Start below company info
       doc.setFontSize(12);
       doc.text(`Orçamento Nº: ${this.orcamento.numero}`, 10, budgetDetailsStartY);
+      // Use the already formatted date string
       doc.text(`Data: ${this.orcamento.data}`, 10, budgetDetailsStartY + lineHeight);
       doc.text(`Vencimento: ${this.orcamento.dataVencimento}`, 10, budgetDetailsStartY + 2 * lineHeight);
 
-      // Add Client Info
+      // --- Add Client Info ---
       const clientInfoStartY = budgetDetailsStartY + 4 * lineHeight;
       doc.text(`Cliente: ${this.orcamento.cliente || 'N/A'}`, 10, clientInfoStartY);
       doc.text(`Telefone: ${this.orcamento.telefone || 'N/A'}`, 10, clientInfoStartY + lineHeight);
       doc.text(`E-mail: ${this.orcamento.email || 'N/A'}`, 10, clientInfoStartY + 2 * lineHeight);
 
 
-      // Add Items Table
+      // --- Add Items Table ---
       const itens = this.orcamento.itens.map(item => [
         (Number(item.quantidade) || 0).toString(),
         item.descricao || '',
@@ -304,139 +279,169 @@ export class OrcamentosComponent implements OnInit {
         `R$ ${(Number(item.valorTotal) || 0).toFixed(2)}`
       ]);
 
-      const tableStartY = clientInfoStartY + 4 * lineHeight; // Space after client info
+      const tableStartY = clientInfoStartY + 4 * lineHeight;
 
       autoTable(doc, {
         head: [['Qtd', 'Descrição', 'Valor Unitário', 'Valor Total']],
         body: itens,
         startY: tableStartY,
         styles: { fontSize: 10 },
+        theme: 'grid', // Optional: Add theme for better look
         margin: { top: 10 }
       });
 
-      // Add Total Value
-      const finalY = (doc as any).lastAutoTable.finalY || tableStartY + 10; // Get the end position of the table
+      // --- Add Total Value ---
+      const finalY = (doc as any).lastAutoTable.finalY || tableStartY + 10; // Get table end position
       doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold'); // Make total stand out
       const valorTotalNum = Number(this.orcamento.valorTotal) || 0;
-      doc.text(`Valor Total: R$ ${valorTotalNum.toFixed(2)}`, 10, finalY + 10); // Position below the table
+      doc.text(`Valor Total: R$ ${valorTotalNum.toFixed(2)}`, 10, finalY + 15); // Position below table with spacing
 
-      // --- Save PDF to File ---
       // --- Save PDF to File ---
       try {
         const pdfBase64 = doc.output('datauristring').split(',')[1];
-        const platform = Capacitor.getPlatform();
         const fileName = `orcamento_${this.orcamento.numero}.pdf`;
-        let targetDirectory: Directory;
-        const pdfSubdirectory = 'Orcamentos'; // Optional: Save PDFs in a subdirectory
+        // *** Standardize on Directory.Data for app-internal files ***
+        const targetDirectory = Directory.Data;
+        const pdfSubdirectory = 'Orcamentos'; // Consistent subdirectory name
+        const fullPath = `${pdfSubdirectory}/${fileName}`; // Relative path
 
-        // Determine the target directory (Your existing logic is fine here)
-        if (platform === 'android') {
-           try {
-               await Filesystem.stat({ path: '', directory: Directory.Documents });
-               targetDirectory = Directory.Documents;
-               console.log('Attempting to save PDF to Documents directory.');
-           } catch {
-               targetDirectory = Directory.Cache;
-               console.log('Falling back to Cache directory for PDF.');
-           }
-        } else if (platform === 'ios') {
-            targetDirectory = Directory.Documents;
-            console.log('Saving PDF to Documents directory (iOS).');
-        } else {
-            targetDirectory = Directory.Cache;
-             console.log('Saving PDF to Cache directory (Web/Other).');
-        }
+        console.log(`Attempting to save PDF to: ${targetDirectory}/${fullPath}`);
 
-        const fullPath = pdfSubdirectory ? `${pdfSubdirectory}/${fileName}` : fileName;
-
-         // Ensure the directory exists (Your existing logic is fine here)
-         if (pdfSubdirectory) {
-             try {
-                 await Filesystem.mkdir({
-                     path: pdfSubdirectory,
-                     directory: targetDirectory,
-                     recursive: true
-                 });
-                  console.log(`Ensured PDF directory ${pdfSubdirectory} exists.`);
-             } catch (e: any) {
-                  if (!e.message?.includes("file already exists") && !e.message?.includes("Folder exists")) {
-                      console.warn(`Could not create PDF directory ${pdfSubdirectory}:`, e);
-                  }
-             }
-         }
-
-        // ***** CORRECTED writeFile call *****
+        // Ensure the directory exists (recursive: true handles this)
         const result = await Filesystem.writeFile({
           path: fullPath,
-          data: pdfBase64, // Provide the base64 string directly
+          data: pdfBase64,
           directory: targetDirectory,
-          // encoding: Encoding.UTF8, // REMOVED this line
-          recursive: true // Creates intermediate directories if needed
+          recursive: true // Creates intermediate 'Orcamentos' directory if needed
         });
-        // ***** End of correction *****
 
-        console.log('PDF file saved:', result.uri);
+        console.log(`PDF file saved: Directory=${targetDirectory}, Path=${fullPath}, URI=${result.uri}`);
 
-        // --- Link the saved PDF to the client (Your existing logic is fine here) ---
-        if (this.orcamento.cliente) {
-            // ... (rest of your linking logic)
+        const fileInfo: FileInfo = { uri: result.uri, path: fullPath, directory: targetDirectory, fileName: fileName };
+
+        // --- Link the saved PDF to the client ---
+        if (this.orcamento.cliente?.trim()) {
+            console.log(`Attempting to find/create client: ${this.orcamento.cliente}`);
+            // Pass the relevant client info from the current orcamento object
+            const clientDataForService = {
+                cliente: this.orcamento.cliente,
+                telefone: this.orcamento.telefone,
+                email: this.orcamento.email
+            };
+            const client = await this.clientesService.findOrCreateClient(clientDataForService);
+
+            if (client && client.id) {
+                console.log(`Client ${client.nome} (ID: ${client.id}) found/created. Attempting to link PDF: ${fileInfo.fileName}`);
+                const pdfInfoToLink: ClientePdfInfo = {
+                    fileName: fileInfo.fileName,
+                    uri: fileInfo.uri // Use the capacitor URI
+                };
+                const linkSuccess = await this.clientesService.addPdfToClient(client, pdfInfoToLink);
+
+                if (linkSuccess) {
+                    console.log('PDF link successful. Saving client list changes.');
+                    // ***** CRITICAL: Save the client list AFTER linking *****
+                    await this.clientesService.saveClientes();
+                    // **********************************************************
+                } else {
+                     console.error('Failed to link PDF to client (possibly duplicate). Client list changes related to this PDF link were not saved.');
+                     // Alert is likely handled by service if it's an error, duplicate is okay.
+                }
+            } else {
+                console.error('Failed to find or create a valid client. PDF not linked.');
+                // Alert is handled by service
+            }
         } else {
             console.log('Client name not provided in budget form. Skipping PDF linking.');
+            await this.clientesService.mostrarAlerta('Aviso', 'O PDF foi salvo, mas não foi vinculado a nenhum cliente pois o nome não foi informado.');
         }
+        // --- End Linking ---
 
-        return { uri: result.uri, path: fullPath, directory: targetDirectory, fileName: fileName };
+        return fileInfo; // Return the FileInfo containing the URI
 
       } catch (error: any) {
-        console.error('Error saving PDF file:', error);
-        await this.clientesService.mostrarAlerta('Erro ao Salvar', `Não foi possível salvar o PDF. Detalhes: ${error.message || error}`);
+        console.error('Error saving or linking PDF file:', error);
+        await this.clientesService.mostrarAlerta('Erro ao Salvar', `Não foi possível salvar ou vincular o PDF. Detalhes: ${error.message || error}`);
         return undefined;
       }
   }
 
   async gerarPdfOrcamento(): Promise<void> {
     console.log('*** Executing gerarPdfOrcamento (Open PDF) ***');
-    const saveResult = await this.savePdfToFile(); // This now also links to client
+    // Basic validation
+    if (!this.orcamento.cliente?.trim()) {
+       await this.clientesService.mostrarAlerta('Aviso', 'Por favor, preencha o nome do cliente antes de gerar o PDF.');
+       return;
+    }
+    if (this.orcamento.itens.length === 0 || !this.orcamento.itens.some(item => item.descricao?.trim())) {
+        await this.clientesService.mostrarAlerta('Aviso', 'Adicione pelo menos um item com descrição ao orçamento.');
+        return;
+    }
+
+    const saveResult = await this.savePdfToFile(); // This handles saving, linking, and saving client list
 
     if (!saveResult) {
-      console.error('PDF generation/saving failed. Cannot open.');
+      console.error('PDF generation/saving/linking failed. Cannot open.');
+      // Alert was shown in savePdfToFile
       return;
     }
 
     try {
-      console.log('Attempting to open PDF via FileOpener...');
+      console.log(`Attempting to open PDF via FileOpener: ${saveResult.uri}`);
       await FileOpener.open({
-        filePath: saveResult.uri, // Use the URI returned by savePdfToFile
+        filePath: saveResult.uri, // Use the URI provided by Filesystem.writeFile
         contentType: 'application/pdf'
       });
       console.log('PDF opened successfully:', saveResult.uri);
-    } catch (openError: any) { // Cast to any to access message safely
+      // Optional: Reset form after success
+      // this.novoOrcamento(); // Consider if this is desired UX
+    } catch (openError: any) {
       console.error('Erro ao abrir o PDF:', openError);
-      // Use the service's alert for user feedback
-       this.clientesService.mostrarAlerta('Erro ao Abrir', `O PDF foi salvo em ${saveResult.directory}/${saveResult.path}, mas não foi possível abri-lo automaticamente. Você pode tentar abri-lo manualmente. Detalhes: ${openError.message || ''}`);
+      // Provide specific feedback if possible
+       let openErrorMessage = `O PDF foi salvo (${saveResult.fileName}), mas não foi possível abri-lo automaticamente.`;
+       if (openError.message?.includes('Activity not found') || openError.message?.includes('No application found')) {
+            openErrorMessage += ' Nenhum aplicativo leitor de PDF instalado?';
+       } else {
+            openErrorMessage += ` Detalhes: ${openError.message || 'Erro desconhecido'}`;
+       }
+       await this.clientesService.mostrarAlerta('Erro ao Abrir', openErrorMessage);
     }
   }
 
   async compartilharPdf(): Promise<void> {
       console.log('*** Executing compartilharPdf (Share PDF) ***');
-      const saveResult = await this.savePdfToFile(); // This now also links to client
+       // Basic validation
+      if (!this.orcamento.cliente?.trim()) {
+         await this.clientesService.mostrarAlerta('Aviso', 'Por favor, preencha o nome do cliente antes de gerar o PDF para compartilhar.');
+         return;
+      }
+      if (this.orcamento.itens.length === 0 || !this.orcamento.itens.some(item => item.descricao?.trim())) {
+          await this.clientesService.mostrarAlerta('Aviso', 'Adicione pelo menos um item com descrição ao orçamento.');
+          return;
+      }
+
+      const saveResult = await this.savePdfToFile(); // Handles saving, linking, and saving client list
 
       if (!saveResult) {
-        console.error('PDF generation/saving failed before sharing. Cannot share.');
+        console.error('PDF generation/saving/linking failed. Cannot share.');
+         // Alert was shown in savePdfToFile
         return;
       }
 
-      // Get company name for subject/text from localStorage or default
+      // --- Prepare share data ---
       const dadosEmpresaString = localStorage.getItem('dadosEmpresa');
-      let nomeEmpresa = 'Nossa Empresa';
+      let nomeEmpresa = 'Sua Empresa'; // Default company name
       if (dadosEmpresaString) {
           try {
               const dadosEmpresa: DadosEmpresa = JSON.parse(dadosEmpresaString);
               nomeEmpresa = dadosEmpresa.nome || nomeEmpresa;
-          } catch { /* ignore parsing error, use default */ }
-      }
+          } catch { /* ignore parsing error */ }
+        }
 
-      const subject = `Orçamento Nº ${this.orcamento.numero} - ${nomeEmpresa}`;
-      const text = `Olá ${this.orcamento.cliente || 'Cliente'},
+        const subject = `Orçamento Nº ${this.orcamento.numero} - ${nomeEmpresa}`;
+        // Use template literals for easier formatting
+        const text = `Olá ${this.orcamento.cliente || 'Cliente'},
 
 Conforme solicitado, segue em anexo o orçamento Nº ${this.orcamento.numero}.
 
@@ -445,68 +450,37 @@ Qualquer dúvida, estamos à disposição.
 Atenciosamente,
 ${nomeEmpresa}`;
 
-      try {
-        console.log('Attempting to share PDF via Share plugin...');
-        const shareResult = await Share.share({
-          title: subject,
-          text: text,
-          url: saveResult.uri, // Use the URI returned by savePdfToFile
-          dialogTitle: 'Compartilhar Orçamento via...'
-        });
+        // --- Share ---
+        try {
+          console.log(`Attempting to share PDF via Share plugin: ${saveResult.uri}`);
+          const shareResult = await Share.share({
+            title: subject,
+            text: text,
+            url: saveResult.uri, // Use the URI from Filesystem.writeFile result
+            dialogTitle: 'Compartilhar Orçamento via...'
+          });
 
-         console.log('Share dialog shown/completed. Result (may be empty):', shareResult);
+           console.log('Share dialog action completed. Result:', shareResult); // Result might be empty {} on success
 
-         // Optional: Delete temporary PDF from Cache after sharing if saved there
-         // PDFs saved in Documents are typically kept.
-         if (saveResult.directory === Directory.Cache) {
-             const platform = Capacitor.getPlatform();
-             if (platform !== 'web') { // Avoid deleting from browser cache (not relevant)
-                 try {
-                     // Using saveResult.path for deletion is correct as it's relative to the directory
-                     await Filesystem.deleteFile({ path: saveResult.path, directory: saveResult.directory });
-                     console.log('Temporary PDF file deleted from Cache after sharing.');
-                 } catch (deleteError: any) { // Cast to any
-                     // Ignore "File does not exist" errors which can happen if sharing cleaned it up
-                     if (!deleteError.message?.includes("File does not exist")) {
-                         console.error('Error deleting temporary file after sharing:', deleteError);
-                     } else {
-                          console.log('Temporary PDF file was already gone after sharing.');
-                     }
-                 }
-             }
-         } else {
-             console.log(`PDF saved in ${saveResult.directory}, not automatically deleting after sharing.`);
-         }
+           // Since we saved to Directory.Data, no cleanup is typically needed unless specified.
+           // If using Directory.Cache, deletion logic would go here.
+           console.log(`PDF saved in ${saveResult.directory}, not automatically deleting after sharing.`);
 
+           // Optional: Reset form after success
+           // this.novoOrcamento(); // Consider if this is desired UX
 
-      } catch (shareError: any) { // Cast to any to access message safely
-        console.error('Error sharing PDF:', shareError);
-        if (shareError.message?.includes('Share cancelled')) {
-            console.log('Share cancelled by user.');
-        } else {
-            // Use the service's alert for user feedback
-            this.clientesService.mostrarAlerta('Erro ao Compartilhar', 'Não foi possível iniciar o compartilhamento.');
+        } catch (shareError: any) {
+          console.error('Error sharing PDF:', shareError);
+          // Check for specific cancellation error messages (can vary by platform/plugin version)
+          if (shareError.message?.includes('Share cancelled') || shareError.code === 'CANCELLED' || shareError.message?.includes('Activity was cancelled')) {
+              console.log('Share cancelled by user.');
+              // Optionally inform user: await this.clientesService.mostrarAlerta('Cancelado', 'Compartilhamento cancelado.');
+          } else {
+              await this.clientesService.mostrarAlerta('Erro ao Compartilhar', `Não foi possível iniciar o compartilhamento. ${shareError.message || ''}`);
+          }
+           // No cleanup needed for Directory.Data files here.
         }
+    }
 
-         // Optional: Delete temporary PDF from Cache if saved there and sharing failed/cancelled
-         if (saveResult.directory === Directory.Cache) {
-             const platform = Capacitor.getPlatform();
-             if (platform !== 'web') {
-                 try {
-                     await Filesystem.deleteFile({ path: saveResult.path, directory: saveResult.directory });
-                     console.log('Temporary PDF file deleted from Cache after sharing error/cancellation.');
-                 } catch (deleteError: any) {
-                     if (!deleteError.message?.includes("File does not exist")) {
-                         console.error('Error deleting temporary file after sharing error:', deleteError);
-                     } else {
-                          console.log('Temporary PDF file was already gone after sharing error.');
-                     }
-                 }
-             }
-         }
-      }
-  }
-
-  // Removed the local mostrarAlerta function as it's in the service now
-
+  // mostrarAlerta is now handled by ClientesService
 }

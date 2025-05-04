@@ -1,3 +1,4 @@
+// src/app/dashboard/dashboard.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,12 +18,16 @@ import {
   IonCardTitle,
   IonAvatar,
   IonIcon,
-  IonButtons,
-  IonNote, IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
-import { cameraOutline, saveOutline, createOutline, trashOutline } from 'ionicons/icons'; // Import icons
-import { addIcons } from 'ionicons'; // Import addIcons
+  IonNote,
+  IonGrid, // Importar IonGrid
+  IonRow,  // Importar IonRow
+  IonCol   // Importar IonCol
+} from '@ionic/angular/standalone';
+import { cameraOutline, saveOutline, createOutline, trashOutline, businessOutline, peopleOutline } from 'ionicons/icons'; // Importar peopleOutline
+import { addIcons } from 'ionicons';
+import { ClientesService } from '../../services/clientes.service'; // Importar ClientesService
 
-// Define the interface for company data (Consider moving this to a shared models file)
+// Definir a interface para os dados da empresa
 interface DadosEmpresa {
   nome: string;
   endereco: string;
@@ -38,26 +43,31 @@ interface DadosEmpresa {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
   standalone: true,
-  imports: [IonRouterOutlet, IonApp,
+  imports: [
+    // --- Módulos Angular ---
     CommonModule,
     FormsModule,
-    IonContent,
+
+    // --- Componentes Ionic Standalone ---
     IonHeader,
     IonToolbar,
     IonTitle,
-    IonButton,
-    IonInput,
-    IonItem,
-    IonLabel,
-    IonList,
+    IonContent,
     IonCard,
-    IonCardContent,
     IonCardHeader,
     IonCardTitle,
-    IonAvatar,
+    IonCardContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonButton,
     IonIcon,
-    IonButtons,
-    IonNote
+    IonAvatar,
+    IonNote,
+    IonGrid, // Adicionar IonGrid
+    IonRow,  // Adicionar IonRow
+    IonCol   // Adicionar IonCol
   ],
 })
 export class DashboardComponent implements OnInit {
@@ -72,67 +82,128 @@ export class DashboardComponent implements OnInit {
     email: '',
   };
   editandoDadosEmpresa: boolean = false;
+  totalClientes: number = 0; // Propriedade para guardar o total de clientes
 
-  constructor() {
-    // Register icons needed for this component
-    addIcons({ cameraOutline, saveOutline, createOutline, trashOutline });
+  // Injetar ClientesService
+  constructor(private clientesService: ClientesService) {
+    // Registar ícones usados no template
+    addIcons({
+        cameraOutline,
+        saveOutline,
+        createOutline,
+        trashOutline,
+        businessOutline,
+        peopleOutline // Adicionar peopleOutline
+    });
   }
 
-  ngOnInit(): void {
-    // Load saved company data
+  mostrarDadosEmpresa = false;
+
+
+  get isFormValid(): boolean {
+    // 1. Verifica usando Optional Chaining se 'nome' existe e tem comprimento > 0 após trim()
+    const nomePreenchido = this.dadosEmpresa?.nome?.trim()?.length > 0;
+
+    // 2. Adicione outras validações obrigatórias aqui, se houver
+    // const emailValido = !!this.dadosEmpresa?.email; // Exemplo simples
+
+    // 3. Retorna um booleano explícito.
+    //    Se nomePreenchido for true, !!true é true.
+    //    Se nomePreenchido for false ou undefined (devido ao ?.), !!false ou !!undefined é false.
+    //    Combine com outras validações usando &&: return !!nomePreenchido && !!emailValido;
+    return !!nomePreenchido;
+  }
+
+  // Tornar ngOnInit assíncrono para aguardar o carregamento dos clientes
+  async ngOnInit(): Promise<void> {
+    // Carregar dados da empresa guardados
     const dadosSalvos = localStorage.getItem('dadosEmpresa');
     if (dadosSalvos) {
       this.dadosEmpresa = JSON.parse(dadosSalvos);
     } else {
-      // Initialize if no data saved
-      this.editandoDadosEmpresa = true; // Start in edit mode if no data
+      this.editandoDadosEmpresa = true;
     }
 
-    // Load saved logo
+    // Carregar logo guardado
     const logoSalva = localStorage.getItem('logoEmpresa');
     if (logoSalva) {
       this.logoUrl = logoSalva;
     }
+
+    // Carregar dados dos clientes e obter a contagem
+    await this.loadClientData();
   }
+
+  // Método para carregar dados dos clientes e a contagem
+  async loadClientData(): Promise<void> {
+    try {
+      // Forçar recarregamento para garantir dados atualizados no dashboard
+      await this.clientesService.loadClientes(true);
+      this.totalClientes = this.clientesService.getTotalClientes();
+      console.log(`Dashboard: Total clientes carregados: ${this.totalClientes}`);
+    } catch (error) {
+      console.error('Dashboard: Erro ao carregar dados de clientes:', error);
+      // Opcionalmente, mostrar uma mensagem de erro ao utilizador
+      this.totalClientes = 0; // Definir como 0 em caso de erro
+    }
+  }
+
+
+  // --- Métodos para Dados da Empresa (mantidos) ---
 
   editarDadosEmpresa(): void {
     this.editandoDadosEmpresa = true;
   }
 
   salvarDadosEmpresa(): void {
-  localStorage.setItem('dadosEmpresa', JSON.stringify(this.dadosEmpresa));
-  this.editandoDadosEmpresa = false;
-  // Mostrar toast/mensagem de sucesso
-  console.log('Dados da empresa salvos com sucesso!');
-}
-
-  // Handle file selection for the logo
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Basic validation (optional: add size/type checks)
-    if (!file.type.startsWith('image/')) {
-        console.error("Tipo de arquivo inválido. Selecione uma imagem.");
-        // Optionally show an alert to the user
-        return;
+    if (!this.dadosEmpresa.nome) {
+       console.warn('Nome da empresa é obrigatório.');
+       return;
     }
-
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      this.logoUrl = e.target.result;
-      // Save the logo (as base64) to localStorage
-      localStorage.setItem('logoEmpresa', this.logoUrl ?? '');
-      console.log('Logo da empresa salva.');
-    };
-    reader.onerror = (error) => {
-        console.error("Erro ao ler o arquivo:", error);
-        // Optionally show an alert to the user
-    };
-    reader.readAsDataURL(file);
+    localStorage.setItem('dadosEmpresa', JSON.stringify(this.dadosEmpresa));
+    this.editandoDadosEmpresa = false;
+    console.log('Dados da empresa guardados com sucesso!');
   }
 
-  // Trigger hidden file input click
+  cancelarEdicao(): void {
+     const dadosSalvos = localStorage.getItem('dadosEmpresa');
+     if (dadosSalvos) {
+       this.dadosEmpresa = JSON.parse(dadosSalvos);
+     }
+     this.editandoDadosEmpresa = false;
+  }
+
+  onFileSelected(event: Event): void {
+    const element = event.currentTarget as HTMLInputElement;
+    const fileList: FileList | null = element.files;
+
+    if (fileList && fileList.length > 0) {
+      const file = fileList[0];
+      if (!file.type.startsWith('image/')) {
+          console.error("Tipo de ficheiro inválido. Selecione uma imagem.");
+          element.value = '';
+          return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target?.result) {
+            this.logoUrl = e.target.result as string;
+            localStorage.setItem('logoEmpresa', this.logoUrl);
+            console.log('Logo da empresa guardado.');
+        } else {
+             console.error("Erro ao ler o ficheiro: resultado vazio.");
+             this.logoUrl = null;
+        }
+      };
+      reader.onerror = (error) => {
+          console.error("Erro ao ler o ficheiro:", error);
+          this.logoUrl = null;
+      };
+      reader.readAsDataURL(file);
+    }
+     element.value = '';
+  }
+
   triggerLogoUpload(): void {
     const fileInput = document.getElementById('logo-upload-input') as HTMLInputElement;
     if (fileInput) {
@@ -140,15 +211,9 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  // Remove the logo
   removerLogo(): void {
     this.logoUrl = null;
     localStorage.removeItem('logoEmpresa');
     console.log('Logo da empresa removido.');
-     // Clear the file input value if needed
-     const fileInput = document.getElementById('logo-upload-input') as HTMLInputElement;
-     if (fileInput) {
-         fileInput.value = '';
-     }
   }
 }

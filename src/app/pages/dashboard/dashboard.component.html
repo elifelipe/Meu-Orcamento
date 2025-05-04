@@ -1,195 +1,194 @@
-<ion-app>
-  <ion-header>
-    <ion-toolbar>
-      <ion-title>Dados da Empresa</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Dashboard</ion-title>
+  </ion-toolbar>
+</ion-header>
 
-  <ion-content class="ion-padding">
-    <div class="logo-section">
-      <input
-        type="file"
-        id="logo-upload-input"
-        accept="image/*"
-        (change)="onFileSelected($event)"
-        style="display: none"
-      >
-      <div class="logo-avatar-container" (click)="triggerLogoUpload()">
-        <ion-avatar class="logo-avatar">
-          @if (logoUrl) {
-            <img [src]="logoUrl" alt="Logo da Empresa" />
-          } @else {
-            <ion-icon name="camera-outline"></ion-icon>
-          }
-        </ion-avatar>
-      </div>
+<ion-content [fullscreen]="true" class="ion-padding">
 
+  <ion-grid>
+    <ion-row class="ion-justify-content-center">
 
-      <div class="logo-actions">
-        <ion-button fill="clear" color="medium" (click)="triggerLogoUpload()">
-          <ion-icon slot="start" name="camera-outline"></ion-icon>
-          Alterar Logo
-        </ion-button>
-        @if (logoUrl) {
-          <ion-button fill="clear" color="danger" (click)="removerLogo()">
-            <ion-icon slot="start" name="trash-outline"></ion-icon>
-            Remover
-          </ion-button>
-        }
-      </div>
-    </div>
+      <ion-col size="12" size-md="6" size-lg="4">
+        <ion-card class="summary-card ion-text-center">
+          <ion-card-header>
+            <ion-icon name="people-outline" size="large" color="secondary"></ion-icon>
+            <ion-card-title>Total de Clientes</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="summary-count">{{ totalClientes ?? 0 }}</div> <ion-note>Clientes cadastrados</ion-note>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
 
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title class="ion-align-items-center ion-justify-content-between">
-          Informações da Empresa
-          @if (!editandoDadosEmpresa) {
-            <ion-button fill="clear" (click)="editarDadosEmpresa()">
-              <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-            </ion-button>
-          }
-        </ion-card-title>
-      </ion-card-header>
+      <ion-button expand="block" (click)="mostrarDadosEmpresa = !mostrarDadosEmpresa">
+        <ion-icon slot="start" name="business-outline"></ion-icon>
+        Dados da sua Empresa
+      </ion-button>
 
-      <ion-card-content>
-        <form>
-          <ion-list>
-            <ion-item>
-              <ion-label position="stacked">Nome da Empresa</ion-label>
-              @if (editandoDadosEmpresa) {
-                <ion-input [(ngModel)]="dadosEmpresa.nome" name="nome" required></ion-input>
-              } @else {
-                <ion-note>{{ dadosEmpresa.nome || 'Não informado' }}</ion-note>
+      <ion-col size="12" size-lg="8" *ngIf="mostrarDadosEmpresa">
+        <ion-card>
+          <ion-card-header>
+            <div class="card-title-container">
+              <ion-card-title>Informações da Empresa</ion-card-title>
+              @if (!editandoDadosEmpresa) {
+                <ion-button fill="clear" (click)="editarDadosEmpresa()" aria-label="Editar Dados da Empresa">
+                  <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
+                </ion-button>
               }
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="stacked">Endereço</ion-label>
-              @if (editandoDadosEmpresa) {
-                <ion-input [(ngModel)]="dadosEmpresa.endereco" name="endereco"></ion-input>
-              } @else {
-                <ion-note>{{ dadosEmpresa.endereco || 'Não informado' }}</ion-note>
-              }
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="stacked">Cidade</ion-label>
-              @if (editandoDadosEmpresa) {
-                <ion-input [(ngModel)]="dadosEmpresa.cidade" name="cidade"></ion-input>
-              } @else {
-                <ion-note>{{ dadosEmpresa.cidade || 'Não informado' }}</ion-note>
-              }
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="stacked">Estado</ion-label>
-              @if (editandoDadosEmpresa) {
-                <ion-input [(ngModel)]="dadosEmpresa.estado" name="estado"></ion-input>
-              } @else {
-                <ion-note>{{ dadosEmpresa.estado || 'Não informado' }}</ion-note>
-              }
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="stacked">Telefone Principal</ion-label>
-              @if (editandoDadosEmpresa) {
-                <ion-input [(ngModel)]="dadosEmpresa.telefone1" name="telefone1" type="tel"></ion-input>
-              } @else {
-                <ion-note>{{ dadosEmpresa.telefone1 || 'Não informado' }}</ion-note>
-              }
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="stacked">Telefone Secundário</ion-label>
-              @if (editandoDadosEmpresa) {
-                <ion-input [(ngModel)]="dadosEmpresa.telefone2" name="telefone2" type="tel"></ion-input>
-              } @else {
-                <ion-note>{{ dadosEmpresa.telefone2 || 'Não informado' }}</ion-note>
-              }
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="stacked">E-mail</ion-label>
-              @if (editandoDadosEmpresa) {
-                <ion-input [(ngModel)]="dadosEmpresa.email" name="email" type="email"></ion-input>
-              } @else {
-                <ion-note>{{ dadosEmpresa.email || 'Não informado' }}</ion-note>
-              }
-            </ion-item>
-          </ion-list>
-
-          @if (editandoDadosEmpresa) {
-            <div class="form-actions">
-              <ion-button expand="block" color="primary" (click)="salvarDadosEmpresa()">
-                <ion-icon slot="start" name="save-outline"></ion-icon>
-                Salvar Dados
-              </ion-button>
-              <ion-button expand="block" fill="outline" color="medium" (click)="editandoDadosEmpresa = false">
-                Cancelar
-              </ion-button>
             </div>
-          }
-        </form>
-      </ion-card-content>
-    </ion-card>
-  </ion-content>
-</ion-app>
+          </ion-card-header>
 
-<style>
-  .logo-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 20px;
-  }
+          <ion-card-content>
+            <div class="logo-section">
+              <input
+                type="file"
+                #logoUploadInput
+                id="logo-upload-input"
+                accept="image/*"
+                (change)="onFileSelected($event)"
+                style="display: none"
+                aria-hidden="true"
+              />
+              <div class="logo-avatar-container" (click)="triggerLogoUpload()" role="button" tabindex="0" aria-label="Carregar ou alterar logo da empresa">
+                <ion-avatar class="logo-avatar">
+                  @if (logoUrl) {
+                    <img [src]="logoUrl" alt="Logo da Empresa" />
+                  } @else {
+                    <ion-icon name="business-outline" class="placeholder-icon" aria-hidden="true"></ion-icon>
+                  }
+                </ion-avatar>
+                <div class="logo-edit-overlay">
+                    <ion-icon name="camera-outline" size="small"></ion-icon>
+                 </div>
+              </div>
+              <div class="logo-actions">
+                <ion-button fill="clear" size="small" color="primary" (click)="triggerLogoUpload()">
+                  <ion-icon slot="start" name="camera-outline" aria-hidden="true"></ion-icon>
+                  Alterar
+                </ion-button>
+                @if (logoUrl) {
+                  <ion-button fill="clear" size="small" color="danger" (click)="removerLogo()">
+                    <ion-icon slot="start" name="trash-outline" aria-hidden="true"></ion-icon>
+                    Remover
+                  </ion-button>
+                }
+              </div>
+            </div>
 
-  .logo-avatar-container {
-    width: 100px; /* Adjust size as needed */
-    height: 100px; /* Adjust size as needed */
-    margin-bottom: 10px;
-    cursor: pointer; /* Indicate it's clickable */
-    border-radius: 50%; /* Make it round */
-    overflow: hidden; /* Ensure image stays within the round shape */
-    border: 1px solid #ddd; /* Optional border */
-    display: flex; /* Center the icon/image */
-    justify-content: center;
-    align-items: center;
-  }
+            <ion-list lines="none" class="company-details-form">
+              <div [class.modo-edicao]="editandoDadosEmpresa" [class.modo-visualizacao]="!editandoDadosEmpresa">
 
-  .logo-avatar {
-     /* Ion-avatar itself */
-     width: 100%;
-     height: 100%;
-  }
+                <ion-item>
+                  <ion-label position="stacked">Nome da Empresa <span class="campo-obrigatorio" *ngIf="editandoDadosEmpresa">*</span></ion-label>
+                  <ion-input
+                    [(ngModel)]="dadosEmpresa.nome"
+                    name="nome"
+                    required
+                    placeholder="Digite o nome da empresa"
+                    [readonly]="!editandoDadosEmpresa"
+                    aria-label="Nome da Empresa">
+                  </ion-input>
+                  <ion-note slot="end" *ngIf="!editandoDadosEmpresa && !dadosEmpresa.nome">-</ion-note>
+                </ion-item>
 
-  .logo-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover; /* Cover the container */
-  }
+                <ion-item>
+                  <ion-label position="stacked">Endereço</ion-label>
+                  <ion-input
+                    [(ngModel)]="dadosEmpresa.endereco"
+                    name="endereco"
+                    placeholder="Rua, Número, Bairro"
+                    [readonly]="!editandoDadosEmpresa"
+                    aria-label="Endereço">
+                  </ion-input>
+                  <ion-note slot="end" *ngIf="!editandoDadosEmpresa && !dadosEmpresa.endereco">-</ion-note>
+                </ion-item>
 
-  .logo-avatar ion-icon {
-      font-size: 48px; /* Adjust icon size */
-      color: #bbb; /* Adjust icon color */
-  }
+                <ion-item>
+                  <ion-label position="stacked">Cidade</ion-label>
+                  <ion-input
+                    [(ngModel)]="dadosEmpresa.cidade"
+                    name="cidade"
+                    placeholder="Nome da cidade"
+                    [readonly]="!editandoDadosEmpresa"
+                    aria-label="Cidade">
+                  </ion-input>
+                  <ion-note slot="end" *ngIf="!editandoDadosEmpresa && !dadosEmpresa.cidade">-</ion-note>
+                </ion-item>
 
+                <ion-item>
+                  <ion-label position="stacked">Estado</ion-label>
+                  <ion-input
+                    [(ngModel)]="dadosEmpresa.estado"
+                    name="estado"
+                    placeholder="UF (Ex: SC)"
+                    maxlength="2"
+                    minlength="2" [readonly]="!editandoDadosEmpresa"
+                    aria-label="Estado">
+                  </ion-input>
+                  <ion-note slot="end" *ngIf="!editandoDadosEmpresa && !dadosEmpresa.estado">-</ion-note>
+                </ion-item>
 
-  .logo-actions {
-    display: flex;
-    gap: 10px; /* Space between buttons */
-  }
+                <ion-item>
+                  <ion-label position="stacked">Telefone Principal</ion-label>
+                  <ion-input
+                    [(ngModel)]="dadosEmpresa.telefone1"
+                    name="telefone1"
+                    type="tel"
+                    placeholder="(XX) XXXXX-XXXX"
+                    inputmode="tel"
+                    [readonly]="!editandoDadosEmpresa"
+                    aria-label="Telefone Principal">
+                  </ion-input>
+                  <ion-note slot="end" *ngIf="!editandoDadosEmpresa && !dadosEmpresa.telefone1">-</ion-note>
+                </ion-item>
 
-  .form-actions {
-    margin-top: 20px;
-  }
+                <ion-item>
+                  <ion-label position="stacked">Telefone Secundário</ion-label>
+                  <ion-input
+                    [(ngModel)]="dadosEmpresa.telefone2"
+                    name="telefone2"
+                    type="tel"
+                    placeholder="(Opcional)"
+                    inputmode="tel"
+                    [readonly]="!editandoDadosEmpresa"
+                    aria-label="Telefone Secundário">
+                  </ion-input>
+                  <ion-note slot="end" *ngIf="!editandoDadosEmpresa && !dadosEmpresa.telefone2">-</ion-note>
+                </ion-item>
 
-  ion-card-title {
-    display: flex;
-  }
+                <ion-item>
+                  <ion-label position="stacked">E-mail</ion-label>
+                  <ion-input
+                    [(ngModel)]="dadosEmpresa.email"
+                    name="email"
+                    type="email"
+                    placeholder="contato@suaempresa.com"
+                    inputmode="email"
+                    [readonly]="!editandoDadosEmpresa"
+                    aria-label="E-mail">
+                  </ion-input>
+                  <ion-note slot="end" *ngIf="!editandoDadosEmpresa && !dadosEmpresa.email">-</ion-note>
+                </ion-item>
 
-  /* Add some styling for the note text */
-  ion-note {
-    padding-top: 8px; /* Align better with label */
-    color: var(--ion-color-medium); /* Use a standard Ionic color */
-  }
-</style>
+              </div>
+            </ion-list>
+
+            @if (editandoDadosEmpresa) {
+              <div class="form-actions ion-padding-top">
+                <ion-button expand="block" color="success" (click)="salvarDadosEmpresa()" [disabled]="!isFormValid"> <ion-icon slot="start" name="save-outline" aria-hidden="true"></ion-icon>
+                  Salvar Dados
+                </ion-button>
+                <ion-button expand="block" fill="outline" color="medium" (click)="cancelarEdicao()">
+                  Cancelar
+                </ion-button>
+              </div>
+            }
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+    </ion-row>
+  </ion-grid>
+
+</ion-content>

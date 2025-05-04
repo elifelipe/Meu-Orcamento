@@ -1,16 +1,12 @@
-// Dentro de admob.service.ts
 import { Injectable } from '@angular/core';
 import { Platform } from '@ionic/angular';
-// Importe os tipos necessários do plugin AdMob que você está usando
 import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition, AdMobInitializationOptions } from '@capacitor-community/admob'; // Verifique o caminho/nome correto do plugin
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdmobService {
-  // Coloque seu ID de anúncio de TESTE aqui!
-  // Veja: https://developers.google.com/admob/android/test-ads
-  private readonly AD_UNIT_ID_BANNER_TEST = 'ca-app-pub-3940256099942544/6300978111';
+  private readonly AD_UNIT_ID_BANNER_TEST = 'ca-app-pub-8781801467559084/7447569544';
   private isInitialized = false;
 
   constructor(private platform: Platform) { }
@@ -24,18 +20,11 @@ export class AdmobService {
     console.log('AdMob Service: Platform pronta, inicializando AdMob...');
 
     try {
-      // *** OPÇÕES SIMPLIFICADAS ***
-      // Removidas as opções não reconhecidas.
-      // Verifique a documentação da SUA versão do plugin para opções exatas.
       const initOptions: AdMobInitializationOptions = {
-         testingDevices: [], // Adicione IDs de dispositivos de teste aqui, se necessário
-         // 'requestTrackingAuthorization' removido
-         // 'initializeForTesting' removido (adicione de volta APENAS se tiver certeza que existe na sua versão)
+         testingDevices: [],
       };
 
-      // Você pode até tentar inicializar com um objeto vazio se permitido:
-      // await AdMob.initialize({});
-      // Ou com as opções simplificadas:
+
       await AdMob.initialize(initOptions);
 
       this.isInitialized = true;
@@ -57,11 +46,11 @@ export class AdmobService {
     console.log('AdMob Service: Solicitando exibição do banner...');
 
     const options: BannerAdOptions = {
-      adId: this.AD_UNIT_ID_BANNER_TEST, // **USE SEU ID DE TESTE AQUI**
-      adSize: BannerAdSize.ADAPTIVE_BANNER, // <--- Para largura adaptável (total)
-      position: BannerAdPosition.TOP_CENTER,   // <--- Posição no topo
-      margin: 50,                            // <--- Sua margem de 50px (aplicada no topo)
-      isTesting: true,                       // <--- Mantenha true em testes!
+      adId: this.AD_UNIT_ID_BANNER_TEST,
+      adSize: BannerAdSize.ADAPTIVE_BANNER,
+      position: BannerAdPosition.TOP_CENTER,
+      margin: 50,
+      // isTesting: true,                       // <--- Mantenha true em testes!
       // npa: true, // Descomente para anúncios não personalizados
     };
 

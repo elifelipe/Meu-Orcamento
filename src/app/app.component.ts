@@ -10,6 +10,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { Platform } from '@ionic/angular'; // Import Platform
 import { AdmobService } from './services/admob.service'; // Import o serviço AdmobService
 
+
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',

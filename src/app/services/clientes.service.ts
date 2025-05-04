@@ -25,9 +25,11 @@ export class ClientesService {
   private clientes: Cliente[] = [];
   private readonly CLIENTES_FILE = 'clientes.json';
   private readonly DATA_DIRECTORY = Directory.Data; // Use Directory.Data for app-specific data
+  private isLoading: boolean = false; // Flag to prevent concurrent loads
+  private hasLoaded: boolean = false; // Flag to check if initial load happened
 
   constructor() {
-     // Initial load happens in loadClientes, called where needed
+     // Initial load is triggered when needed
   }
 
   private getClientesFilePath(): string {
@@ -37,14 +39,14 @@ export class ClientesService {
 
   // --- File System Operations ---
 
-  async loadClientes(): Promise<Cliente[]> {
-    // Avoid reloading if already loaded (simple caching)
-    // Note: This might cause issues if data is modified externally.
-    // Consider adding a forceReload option if needed.
-    if (this.clientes.length > 0) {
-        return [...this.clientes]; // Return a copy
+  async loadClientes(forceReload: boolean = false): Promise<Cliente[]> {
+    // Prevent concurrent loading and redundant loading
+    if (this.isLoading || (this.hasLoaded && !forceReload)) {
+        console.log('LoadClientes: Skipping load (already loading or loaded).');
+        return [...this.clientes];
     }
 
+    this.isLoading = true;
     console.log(`Loading clients from ${this.DATA_DIRECTORY}/${this.getClientesFilePath()}`);
     try {
       // Check if the file exists first using stat
@@ -61,32 +63,33 @@ export class ClientesService {
       });
 
       this.clientes = JSON.parse(result.data.toString()) as Cliente[];
+      this.hasLoaded = true; // Mark as loaded
       console.log(`Loaded ${this.clientes.length} clients.`);
-      return [...this.clientes]; // Return a copy
+
 
     } catch (e: any) {
-      // Handle common "file not found" errors gracefully
       if (e.message?.includes('No such file') || e.message?.includes('File does not exist') || e.message?.includes('The file “clientes.json” couldn’t be opened')) {
         console.log('Clients file not found, initializing empty list.');
         this.clientes = [];
-        return [];
+        this.hasLoaded = true; // Mark as loaded (with empty data)
       } else {
-        // Log other errors and show an alert
         console.error('Error loading clients:', e);
         await this.mostrarAlerta('Erro de Carga', `Não foi possível carregar os dados dos clientes: ${e.message || 'Erro desconhecido'}`);
-        // Return empty array to allow app to continue, but data is missing
-        this.clientes = [];
-        return [];
+        this.clientes = []; // Ensure it's an empty array on error
+        // Do not set hasLoaded to true on critical errors? Or set it? Decided to set it to avoid reload loops.
+        this.hasLoaded = true;
       }
+    } finally {
+        this.isLoading = false; // Release loading flag
     }
+    return [...this.clientes]; // Return a copy
   }
 
   async saveClientes(): Promise<void> {
      console.log(`Saving ${this.clientes.length} clients to ${this.DATA_DIRECTORY}/${this.getClientesFilePath()}`);
     try {
-      // Ensure the directory exists (recursive: true creates parent directories if needed)
-       const directoryPath = this.getClientesFilePath().substring(0, this.getClientesFilePath().lastIndexOf('/'));
-        if (directoryPath) { // Only try to create directory if path has a directory part
+      const directoryPath = this.getClientesFilePath().substring(0, this.getClientesFilePath().lastIndexOf('/'));
+        if (directoryPath) {
              try {
                  await Filesystem.mkdir({
                      path: directoryPath,
@@ -95,24 +98,21 @@ export class ClientesService {
                  });
                  console.log(`Ensured directory ${directoryPath} exists.`);
              } catch (e: any) {
-                  // Ignore "file already exists" errors which are expected if directory exists
                   if (!e.message?.includes("file already exists") && !e.message?.includes("Folder exists") && !e.message?.includes("already exists")) {
                       console.warn(`Could not create directory ${directoryPath}:`, e);
-                      // Proceed with writeFile anyway, it might handle it or fail there
                   }
              }
         }
 
-      // Write the file
       await Filesystem.writeFile({
         path: this.getClientesFilePath(),
         directory: this.DATA_DIRECTORY,
-        data: JSON.stringify(this.clientes, null, 2), // Pretty print JSON for readability
+        data: JSON.stringify(this.clientes, null, 2),
         encoding: Encoding.UTF8,
-        recursive: true // Creates directories if they don't exist
+        recursive: true
       });
        console.log('Clients saved successfully.');
-    } catch (e: any) { // Catch specific type if possible, otherwise 'any'
+    } catch (e: any) {
       console.error('Error saving clients:', e);
        await this.mostrarAlerta('Erro ao Salvar', `Não foi possível salvar os dados dos clientes: ${e.message || e}`);
     }
@@ -121,14 +121,10 @@ export class ClientesService {
   // --- Client Management ---
 
   async findOrCreateClient(orcamento: { cliente: string; telefone: string; email: string; }): Promise<Cliente | null> {
-      // Ensure clients are loaded
-      if (this.clientes.length === 0) {
-          await this.loadClientes();
-      }
+      // Ensure clients are loaded before proceeding
+      await this.loadClientes();
 
       const { cliente: nomeOrcamento, telefone: telefoneOrcamento, email: emailOrcamento } = orcamento;
-
-      // Normalize inputs (trim whitespace, maybe lowercase for case-insensitive matching)
       const searchName = nomeOrcamento?.trim();
       const searchPhone = telefoneOrcamento?.trim();
       const searchEmail = emailOrcamento?.trim().toLowerCase();
@@ -136,70 +132,59 @@ export class ClientesService {
       if (!searchName) {
           console.error("Client name is required to find or create.");
           await this.mostrarAlerta("Erro", "Nome do cliente não pode estar vazio.");
-          return null; // Cannot proceed without a name
+          return null;
       }
 
-      // Try to find an existing client based on name AND at least one matching contact detail
-      // This logic might need adjustment based on exact requirements (e.g., allow match on name only?)
       let existingClient = this.clientes.find(c => {
           const clientName = c.nome?.trim();
           const clientPhone = c.telefone?.trim();
           const clientEmail = c.email?.trim().toLowerCase();
 
-          // Match if names are the same AND either phone or email also matches (if provided)
           return clientName === searchName &&
                  ((!!searchPhone && clientPhone === searchPhone) || (!!searchEmail && clientEmail === searchEmail));
       });
 
-      // If no match with contact details, try matching by name only (if contacts were empty)
       if (!existingClient && !searchPhone && !searchEmail) {
           existingClient = this.clientes.find(c => c.nome?.trim() === searchName);
       }
 
       if (existingClient) {
           console.log(`Found existing client: ${existingClient.nome} (ID: ${existingClient.id})`);
-          // Optionally update contact info if the new orcamento has more details?
-          // existingClient.telefone = existingClient.telefone || searchPhone;
-          // existingClient.email = existingClient.email || searchEmail;
           return existingClient;
       } else {
           console.log(`Client not found for "${searchName}". Creating new client.`);
-          // Create a new client
           const newClient: Cliente = {
-              // Generate a more robust unique ID
               id: this.generateUUID(),
               nome: searchName,
-              telefone: searchPhone || undefined, // Store as undefined if empty
-              email: searchEmail || undefined,   // Store as undefined if empty
-              pdfs: [] // Start with an empty array of PDFs
+              telefone: searchPhone || undefined,
+              email: searchEmail || undefined,
+              pdfs: []
           };
           this.clientes.push(newClient);
-          // No save here, the caller (e.g., OrcamentosComponent) should call saveClientes
-          // after successfully adding the PDF link to this new client.
+          // Important: Don't save here. Let the caller save after linking the PDF.
           return newClient;
       }
   }
 
   async addPdfToClient(client: Cliente, pdfInfo: ClientePdfInfo): Promise<boolean> {
-      // Find the client *in the service's current list* using a unique ID
+      // No need to load here, assume client object is valid and list is loaded by caller context
       const clientInList = this.clientes.find(c => c.id === client.id);
 
       if (!clientInList) {
           console.error(`Client with ID ${client.id} (${client.nome}) not found in the service list. Cannot add PDF.`);
           await this.mostrarAlerta('Erro Interno', 'Falha ao localizar o cliente para vincular o PDF. Tente salvar o orçamento novamente.');
-          return false; // Indicate failure
+          return false;
       }
 
-      // Check if this PDF URI is already linked to avoid duplicates
       const pdfExists = clientInList.pdfs.some(pdf => pdf.uri === pdfInfo.uri);
       if (!pdfExists) {
           clientInList.pdfs.push(pdfInfo);
           console.log(`Added PDF "${pdfInfo.fileName}" to client "${clientInList.nome}" (ID: ${clientInList.id})`);
-          // The caller (e.g., OrcamentosComponent) is responsible for calling saveClientes
-          return true; // Indicate success
+          // Caller is responsible for calling saveClientes
+          return true;
       } else {
           console.log(`PDF "${pdfInfo.fileName}" already linked to client "${clientInList.nome}". Skipping.`);
-          return true; // Indicate success (already done)
+          return true;
       }
   }
 
@@ -209,10 +194,8 @@ export class ClientesService {
             await this.mostrarAlerta('Aviso', 'Nome do cliente é obrigatório.');
             return null;
         }
-         // Ensure clients are loaded
-        await this.loadClientes(); // Load if not already loaded
+        await this.loadClientes(); // Ensure loaded
 
-        // Optional: Check if a client with the same name/details already exists
         const existing = this.clientes.find(c =>
             c.nome === nome &&
             c.telefone === (newClientData.telefone || undefined) &&
@@ -231,9 +214,8 @@ export class ClientesService {
              pdfs: []
         };
         this.clientes.push(clientToAdd);
-        await this.saveClientes(); // Save immediately after adding
-        console.log(`Added new client: ${clientToAdd.nome} (ID: ${clientToAdd.id})`);
-        return clientToAdd; // Return the newly added client
+        await this.saveClientes(); // Save immediately
+        return clientToAdd;
    }
 
    async removeClient(clientToRemove: Cliente): Promise<boolean> {
@@ -243,75 +225,63 @@ export class ClientesService {
            return false;
        }
 
-       // Ensure clients are loaded
-       await this.loadClientes(); // Load if needed
+       await this.loadClientes(); // Ensure loaded
 
-       const initialLength = this.clientes.length;
        const clientIndex = this.clientes.findIndex(c => c.id === clientToRemove.id);
 
        if (clientIndex === -1) {
-           console.warn(`Attempted to remove client not found in the service list (ID: ${clientToRemove.id}).`);
-           // Optionally show an alert, or just return false
-           // await this.mostrarAlerta('Aviso', 'Cliente não encontrado para remoção.');
+           console.warn(`Attempted to remove client not found (ID: ${clientToRemove.id}).`);
            return false;
        }
 
-       // --- Delete Associated PDF Files ---
-       console.log(`Deleting ${clientToRemove.pdfs.length} associated PDFs for client ${clientToRemove.nome}...`);
+       // Clone the pdfs array before modifying the client list
+       const pdfsToDelete = [...this.clientes[clientIndex].pdfs];
+       const clientNameForLog = this.clientes[clientIndex].nome; // Get name before splice
+
+       // Remove client from the array FIRST
+       this.clientes.splice(clientIndex, 1);
+       console.log(`Removed client: ${clientNameForLog} (ID: ${clientToRemove.id}) from list.`);
+
+        // Save the updated list immediately *before* attempting file deletions
+       await this.saveClientes();
+       console.log('Client list saved after removal.');
+
+
+       // --- Now, attempt to Delete Associated PDF Files ---
+       console.log(`Attempting to delete ${pdfsToDelete.length} associated PDFs for removed client ${clientNameForLog}...`);
        let pdfDeletionErrors = false;
-       for (const pdfInfo of clientToRemove.pdfs) {
+       for (const pdfInfo of pdfsToDelete) {
            try {
-               // IMPORTANT: Filesystem URIs often represent paths *within* the app's data directory.
-               // We need to extract the relative path from the URI to use with Filesystem.deleteFile.
-               // This assumes the URI format is consistent (e.g., starts with 'file://' or similar).
-               // A more robust approach might store the relative path alongside the URI when saving.
+               // *** IMPORTANT REVISION FOR PDF DELETION ***
+               // Assume the PDF file is stored within a known subdirectory relative to Directory.Data
+               // Example: If orcamentos are saved in 'pdfs/', the path would be 'pdfs/filename.pdf'
+               // Adjust 'pdfs/' if you use a different subfolder name.
+               const assumedPdfPath = `pdfs/${pdfInfo.fileName}`; // <--- ADJUST 'pdfs/' IF NEEDED
 
-               // Example URI parsing (adjust based on actual URI format from Capacitor):
-               let relativePathToDelete: string | undefined;
-               if (pdfInfo.uri.startsWith('file://')) {
-                   // Find the part after the app's data directory root. This is tricky and platform-dependent.
-                   // A simpler, often effective way if files are stored directly in 'data/pdfs/' etc.
-                   // is to just use the filename IF the service controls the storage location.
-                   // Assuming pdfInfo.fileName IS the relative path within DATA_DIRECTORY for simplicity here.
-                   // **THIS MIGHT NEED ADJUSTMENT BASED ON HOW URIs ARE GENERATED/STORED**
-                   // A better approach is to store the relative path explicitly when creating the PDF link.
-                   // For now, we try using the fileName, assuming it's within a known subfolder like 'pdfs'.
-                   // Let's assume files are saved in 'data/pdfs/' relative to Directory.Data
-                   const assumedPdfPath = `pdfs/${pdfInfo.fileName}`; // Adjust subfolder if needed
-
-                   const deleteOptions: DeleteFileOptions = {
-                       path: assumedPdfPath, // Use the assumed relative path
-                       directory: this.DATA_DIRECTORY
-                   };
-                   console.log(`Attempting to delete file: ${deleteOptions.directory}/${deleteOptions.path}`);
-                   await Filesystem.deleteFile(deleteOptions);
-                   console.log(`Deleted PDF file: ${pdfInfo.fileName}`);
-
-               } else {
-                    console.warn(`Cannot determine relative path from URI to delete file: ${pdfInfo.uri}`);
-                    // If URIs are content:// URIs, deletion might not be possible/allowed directly.
-               }
+               const deleteOptions: DeleteFileOptions = {
+                   path: assumedPdfPath,
+                   directory: this.DATA_DIRECTORY
+               };
+               console.log(`Attempting to delete file: ${deleteOptions.directory}/${deleteOptions.path}`);
+               await Filesystem.deleteFile(deleteOptions);
+               console.log(`Successfully deleted PDF file: ${pdfInfo.fileName}`);
 
            } catch (e: any) {
-               console.error(`Error deleting PDF file ${pdfInfo.fileName} (URI: ${pdfInfo.uri}):`, e);
-               // Don't stop the client removal, but log the error.
-               pdfDeletionErrors = true;
-               // Optionally, inform the user about file deletion issues.
+                // Check for file not found errors specifically, which might be okay if manually deleted
+                if (e.message?.includes('No such file') || e.message?.includes('File does not exist')) {
+                    console.warn(`PDF file not found during deletion (may have been removed manually): ${pdfInfo.fileName}`);
+                } else {
+                    console.error(`Error deleting PDF file ${pdfInfo.fileName} (Path: ${this.DATA_DIRECTORY}/pdfs/${pdfInfo.fileName}):`, e);
+                    pdfDeletionErrors = true; // Mark that *some* error occurred
+                }
            }
        }
        if (pdfDeletionErrors) {
-            await this.mostrarAlerta('Aviso', 'Não foi possível excluir um ou mais arquivos PDF associados ao cliente. Eles podem precisar ser removidos manualmente.');
+            await this.mostrarAlerta('Aviso de Limpeza', 'Não foi possível excluir um ou mais arquivos PDF associados ao cliente removido. Verifique o armazenamento do aplicativo se necessário.');
        }
        // --- End PDF Deletion ---
 
-
-       // Remove client from the array
-       this.clientes.splice(clientIndex, 1);
-       console.log(`Removed client: ${clientToRemove.nome} (ID: ${clientToRemove.id})`);
-
-       // Save the updated list
-       await this.saveClientes();
-       return true; // Indicate success
+       return true; // Indicate success (client removed from list, attempted file cleanup)
    }
 
 
@@ -322,7 +292,24 @@ export class ClientesService {
        return [...this.clientes];
    }
 
-   // Simple UUID generator (good enough for client-side IDs)
+   // <<< NEW: Method to get total client count >>>
+   /**
+    * Returns the current number of clients loaded in the service.
+    * Ensure loadClientes() has been called at least once before relying on this.
+    */
+   getTotalClientes(): number {
+       return this.clientes.length;
+   }
+
+   // <<< NEW: Method to get total budget (PDF) count >>>
+   /**
+    * Returns the total number of PDFs across all clients loaded in the service.
+    * Ensure loadClientes() has been called at least once before relying on this.
+    */
+   getTotalOrcamentos(): number {
+       return this.clientes.reduce((total, cliente) => total + cliente.pdfs.length, 0);
+   }
+
    private generateUUID(): string {
        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
            const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -330,7 +317,6 @@ export class ClientesService {
        });
    }
 
-   // Helper for alerts
    async mostrarAlerta(titulo: string, mensagem: string): Promise<void> {
         try {
             await Dialog.alert({
@@ -339,10 +325,8 @@ export class ClientesService {
               buttonTitle: 'OK'
             });
         } catch (e) {
-            // Fallback for environments where Dialog might not be available (e.g., some web contexts)
             console.error('Capacitor Dialog error, logging to console:', e);
             console.log(`ALERT: ${titulo} - ${mensagem}`);
-            // alert(`${titulo}\n${mensagem}`); // Avoid browser alert if possible
         }
       }
 }
