@@ -6,7 +6,7 @@ import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition, AdMobInitializa
   providedIn: 'root'
 })
 export class AdmobService {
-  private readonly AD_UNIT_ID_BANNER_TEST = 'ca-app-pub-8781801467559084/7447569544';
+  private readonly AD_UNIT_ID_BANNER_TEST = 'ca-app-pub-8781801467559084/5645512640';
   private isInitialized = false;
 
   constructor(private platform: Platform) { }
@@ -47,11 +47,11 @@ export class AdmobService {
 
     const options: BannerAdOptions = {
       adId: this.AD_UNIT_ID_BANNER_TEST,
-      adSize: BannerAdSize.ADAPTIVE_BANNER,
+      adSize: BannerAdSize.FULL_BANNER,
       position: BannerAdPosition.TOP_CENTER,
       margin: 50,
-      // isTesting: true,                       // <--- Mantenha true em testes!
-      // npa: true, // Descomente para anúncios não personalizados
+      isTesting: true,                       // <--- Mantenha true em testes!
+      npa: true, // Descomente para anúncios não personalizados
     };
 
     try {

@@ -9,7 +9,6 @@
 
 <ion-content class="ion-padding">
 
-  <!-- Informações do Cliente -->
   <ion-card class="client-info-card">
     <ion-card-header>
       <ion-card-title>Orçamento Nº: {{ orcamento.numero }}</ion-card-title>
@@ -35,77 +34,78 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Itens do Orçamento -->
   <ion-card class="budget-items-card">
     <ion-card-header>
       <ion-card-title>Itens do Orçamento</ion-card-title>
     </ion-card-header>
     <ion-card-content>
+      <mat-accordion multi="true">
+        <mat-expansion-panel *ngFor="let item of orcamento.itens; let i = index" class="budget-item-expansion-panel"
+                             [expanded]="orcamento.itens.length === 1 || !item.descricao">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              {{ item.descricao || 'Item ' + (i + 1) }}
+            </mat-panel-title>
+            <mat-panel-description>
+              Qtd: {{ item.quantidade || 0 }} | Total: {{ (item.valorTotal | currency:'BRL':'symbol':'1.2-2') || (0 | currency:'BRL':'symbol':'1.2-2') }}
+            </mat-panel-description>
+          </mat-expansion-panel-header>
 
-      <!-- Cabeçalho das colunas -->
-      <div class="budget-item-header-row">
-        <span class="header-label">Qtd</span>
-        <span class="header-label">Descrição</span>
-        <span class="header-label">V. Unit.</span>
-        <span class="header-label">V. Total</span>
-        <div class="header-actions-spacer"></div>
-      </div>
-
-      <!-- Lista de Itens -->
-      <div *ngFor="let item of orcamento.itens; let i = index" class="budget-item-row">
-        <div class="item-content-wrapper">
-
-          <!-- Linha 1: Qtd e Descrição -->
-          <div class="item-row-pair">
-            <mat-form-field appearance="outline" class="input-qtd">
-              <mat-label>Qtd</mat-label>
-              <input matInput type="number" [(ngModel)]="item.quantidade" (ngModelChange)="atualizarItem(item)"
-                [name]="'quantidade_' + i" min="0" aria-label="Quantidade" title="Quantidade">
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="input-desc">
+          <div class="item-fields-content">
+            <mat-form-field appearance="outline" class="full-width-field item-description-field">
               <mat-label>Descrição</mat-label>
-              <input matInput type="text" [(ngModel)]="item.descricao" [name]="'descricao_' + i"
-                aria-label="Descrição" title="Descrição">
+              <input matInput type="text" [(ngModel)]="item.descricao"
+                (ngModelChange)="atualizarItem(item)"
+                [name]="'descricao_' + i" aria-label="Descrição do Item" title="Descrição do Item" placeholder="Ex: Serviço de manutenção">
             </mat-form-field>
-          </div>
 
-       <!-- Linha 2: Valor Unitário, Valor Total e Botão Remover -->
-<div class="item-row-pair with-remove">
-  <mat-form-field appearance="outline" class="input-valor input-unit">
-    <mat-label>V. Unit.</mat-label>
-    <input matInput type="number" [(ngModel)]="item.valorUnitario" (ngModelChange)="atualizarItem(item)"
-      [name]="'valorUnitario_' + i" min="0" step="0.01" aria-label="Valor Unitário" title="Valor Unitário">
-  </mat-form-field>
+            <div class="item-row-pair">
+              <mat-form-field appearance="outline" class="input-valor-unitario">
+                <mat-label>V. Unit.</mat-label>
+                <span matPrefix>R$&nbsp;</span>
+                <input matInput type="text" placeholder="0,00" [(ngModel)]="item.valorUnitario"
+                  (ngModelChange)="atualizarItem(item)"
+                  [name]="'valorUnitario_' + i" aria-label="Valor Unitário" title="Valor Unitário">
+              </mat-form-field>
 
-  <mat-form-field appearance="outline" class="input-valor input-total">
-    <mat-label>V. Total</mat-label>
-    <input matInput type="text" [value]="(item.valorTotal | currency:'BRL':'symbol':'1.2-2')" readonly
-      aria-label="Valor Total" title="Valor Total">
-  </mat-form-field>
+              <mat-form-field appearance="outline" class="input-quantidade">
+                <mat-label>Qtd</mat-label>
+                <input matInput type="number" placeholder="0" [(ngModel)]="item.quantidade"
+                  (ngModelChange)="atualizarItem(item)"
+                  [name]="'quantidade_' + i" min="0" step="1" aria-label="Quantidade" title="Quantidade">
+              </mat-form-field>
+            </div>
 
-  <div class="item-actions-inline">
-    <ion-button fill="clear" color="danger" (click)="removerItem(i)" [disabled]="orcamento.itens.length <= 1"
-      aria-label="Remover Item" title="Remover Item">
-      <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-    </ion-button>
-  </div>
-</div>
+            <mat-form-field appearance="outline" class="full-width-field input-valor-total">
+              <mat-label>V. Total</mat-label>
+              <input matInput type="text" [value]="(item.valorTotal | currency:'BRL':'symbol':'1.2-2')" readonly
+                aria-label="Valor Total do Item" title="Valor Total do Item">
+            </mat-form-field>
+          </div> <mat-action-row>
+            <button mat-stroked-button color="warn" (click)="removerItem(i)"
+              [disabled]="orcamento.itens.length <= 1 && orcamento.itens[0] === item"
+              aria-label="Remover Item" title="Remover Item">
+              <mat-icon>delete_outline</mat-icon>
+              Remover
+            </button>
+          </mat-action-row>
 
+        </mat-expansion-panel>
+      </mat-accordion>
 
-        </div>
+      <div *ngIf="!orcamento.itens || orcamento.itens.length === 0" class="empty-items-message ion-text-center ion-padding">
+        <ion-icon name="list-outline" style="font-size: 2em; color: var(--ion-color-medium);"></ion-icon>
+        <p>Nenhum item adicionado ainda.</p>
       </div>
 
-      <!-- Botão Adicionar Item -->
       <ion-button expand="block" fill="outline" (click)="adicionarItem()" class="ion-margin-top">
         <ion-icon slot="start" name="add-circle-outline"></ion-icon>
-        Adicionar Item
+        Adicionar Novo Item
       </ion-button>
 
     </ion-card-content>
   </ion-card>
 
-  <!-- Totais e Ações -->
   <ion-card class="totals-actions-card">
     <ion-card-content>
       <div class="total-section">

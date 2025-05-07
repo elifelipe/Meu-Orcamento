@@ -1,5 +1,5 @@
 // =======================================
-// Variáveis
+// Variáveis (Mantidas do seu original)
 // =======================================
 $item-gap-mobile: 12px;
 $item-vertical-gap: 16px;
@@ -10,7 +10,7 @@ $card-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
 $card-border-radius: 8px;
 
 // =======================================
-// Layout Base
+// Layout Base (Mantido do seu original)
 // =======================================
 :host {
   display: block;
@@ -18,26 +18,38 @@ $card-border-radius: 8px;
 
 ion-content {
   --background: var(--ion-color-light, #f4f5f8);
-  --padding-top: 70px;
-  --padding-bottom: 100px;
+  // Ajuste no padding-top para evitar sobreposição com o header fixo, se necessário
+  // Se o seu ion-header não for translúcido ou não tiver um comportamento especial,
+  // este padding pode não ser necessário ou pode ser menor.
+  --padding-top: 70px; // Exemplo, ajuste conforme a altura real do seu header
+  --padding-bottom: 100px; // Reduzido um pouco para melhor visualização dos cards inferiores
   --padding-start: 12px;
   --padding-end: 12px;
 }
 
+
 // =======================================
-// Header
+// Header (Mantido do seu original)
 // =======================================
-ion-title,
-ion-back-button {
-  padding-top: 15px;
-  padding-bottom: 2px;
+ion-toolbar { // Aplicar padding ao toolbar para o conteúdo não colar nas bordas
+  --padding-top: 4px;
+  --padding-bottom: 4px;
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+ion-title {
+  font-size: 1.15em; // Levemente maior para destaque
 }
 
 // =======================================
-// Cards
+// Cards (Mantido do seu original, com pequenos ajustes)
 // =======================================
 ion-card {
-  margin: 0 0 20px;
+  margin-left: 0; // Garante que o card use o padding do ion-content
+  margin-right: 0; // Garante que o card use o padding do ion-content
+  margin-top: 0;
+  margin-bottom: 20px;
   box-shadow: $card-shadow;
   border-radius: $card-border-radius;
   background: var(--ion-card-background, #fff);
@@ -47,7 +59,8 @@ ion-card {
   }
 
   ion-card-header {
-    padding: 14px 16px 6px;
+    padding: 14px 16px 8px; // Ajuste no padding inferior
+    border-bottom: 1px solid var(--ion-color-step-100, #e0e0e0); // Linha sutil
   }
 
   ion-card-title {
@@ -57,17 +70,19 @@ ion-card {
   }
 
   ion-card-content {
-    padding: 0 16px 18px;
+    padding: 16px; // Padding uniforme
   }
 }
 
 // =======================================
-// Cliente — Formulário
+// Cliente — Formulário (Mantido do seu original)
 // =======================================
 .client-info-card {
   ion-item {
-    --padding-start: 16px;
-    --padding-end: 16px;
+    --padding-start: 0; // Remover padding do item para alinhar com card-content
+    --padding-end: 0;
+    --inner-padding-end: 0; // Para inputs
+    --min-height: 50px; // Altura mínima para melhor toque
   }
 
   ion-label[position="stacked"],
@@ -75,132 +90,124 @@ ion-card {
     font-size: 0.85em;
     font-weight: 500;
     color: $label-color;
+    margin-bottom: 2px;
   }
 
   ion-input {
     font-size: 1em;
-    --padding-top: 8px;
-    --padding-bottom: 8px;
+    --padding-top: 10px;
+    --padding-bottom: 10px;
   }
 }
 
 // =======================================
-// Itens do Orçamento
+// Itens do Orçamento (SEÇÃO ATUALIZADA)
 // =======================================
-.budget-item-header-row {
-  display: flex;
-  align-items: center;
-  padding: 10px 0;
-  font-weight: 600;
-  color: var(--ion-color-medium);
-  border-bottom: 1px solid var(--ion-color-step-200, #ddd);
-  margin-bottom: 8px;
-  font-size: 0.85em;
+.budget-items-card {
+  .budget-item-expansion-panel {
+    border-radius: $card-border-radius !important; // Garante bordas arredondadas consistentes
+    margin-bottom: $item-vertical-gap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); // Sombra sutil para cada painel
 
-  .header-label {
-    padding: 0 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+
+    // Remove a sombra padrão do painel para usar a do card ou a customizada acima
+    &.mat-expanded, &:not(.mat-expanded) {
+       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
   }
 
-  // Definições de tamanho das colunas
-  .header-label:nth-child(1) { flex: 0 0 60px; text-align: center; }
-  .header-label:nth-child(2) { flex: 1 1 auto; text-align: left; min-width: 120px; }
-  .header-label:nth-child(3) { flex: 0 0 130px; text-align: right; }
-  .header-label:nth-child(4) { flex: 0 0 150px; text-align: right; }
-  .header-actions-spacer { flex: 0 0 44px; }
-}
+  .mat-expansion-panel-header {
+    padding: 0 16px; // Ajuste de padding para o header do painel
+    height: 56px; // Altura consistente
+  }
 
-.budget-item-row {
-  display: flex;
-  flex-direction: column;
-  gap: $item-gap-mobile;
-  margin-bottom: $item-vertical-gap;
+  .mat-panel-title, .mat-panel-description {
+    font-size: 0.9em;
+  }
+  .mat-panel-description {
+    color: var(--ion-color-medium-shade);
+  }
 
-  .item-content-wrapper {
+
+  .item-fields-content {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: $item-vertical-gap; // Espaço vertical entre as linhas de campos
+    padding: 8px 0px 16px 0px; // Padding interno do corpo do painel (top, horiz, bottom, horiz)
+  }
+
+  .full-width-field {
+    width: 100%;
   }
 
   .item-row-pair {
     display: flex;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: $item-gap-mobile; // Espaço entre V.Unit e Qtd
 
     mat-form-field {
-      flex: 1 1 auto;
-      --padding: 0;
-
-      .mat-form-field-wrapper {
-        padding-bottom: 0;
-      }
-
-      .mat-form-field-infix {
-        min-height: 48px;
-      }
-
-      &.input-qtd {
-        flex: 0 0 60px;
-      }
-
-      &.input-desc {
-        flex: 1 1 auto;
-      }
-
-      &.input-valor.input-unit {
-        flex: 0 0 130px;
-        text-align: right;
-      }
-
-      &.input-valor.input-total {
-        flex: 0 0 150px;
-        text-align: right;
-      }
+      flex: 1; // Faz com que V.Unit e Qtd dividam o espaço igualmente
     }
   }
 
-  .item-actions-inline {
-    flex: 0 0 44px;
-    display: flex;
-    justify-content: flex-end;
+  // Ajustes específicos para os campos de formulário Material dentro dos itens
+  .item-fields-content mat-form-field {
+    .mat-mdc-form-field-subscript-wrapper { // Remove espaço extra abaixo do campo se não houver erros/dicas
+        display: none;
+    }
+    .mat-mdc-text-field-wrapper { // Ajusta altura do contêiner do input
+        min-height: 50px;
+    }
+    .mat-mdc-floating-label { // Ajusta posição do label flutuante
+        top: 18px;
+    }
+  }
 
-    ion-button {
-      --border-radius: 6px;
-      --padding-start: 0;
-      --padding-end: 0;
-      height: 48px;
+
+  mat-action-row {
+    justify-content: flex-end; // Alinha o botão Remover à direita
+    padding: 8px 0px 0px 0px !important; // Ajuste para não colar nos campos acima, remove padding lateral
+  }
+
+  .empty-items-message {
+    color: var(--ion-color-medium-shade);
+    ion-icon {
+      font-size: 2.5em;
+      margin-bottom: 8px;
     }
   }
 }
 
+
 // =======================================
-// Totais e Ações
+// Totais e Ações (Mantido do seu original, com pequenos ajustes)
 // =======================================
 .totals-actions-card {
   background: transparent;
   box-shadow: none;
-  margin-top: 14px;
+  margin-top: 24px; // Mais espaço acima dos totais
 
   .total-section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
-    padding-bottom: 14px;
-    margin-bottom: 18px;
+    gap: 6px;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
     border-bottom: 1px solid var(--ion-color-step-200, #ccc);
   }
 
   .total-label {
-    font-size: 0.9em;
+    font-size: 0.95em;
     color: $label-color;
     font-weight: 500;
   }
 
   .total-value {
-    font-size: 1.6em;
+    font-size: 1.8em; // Levemente maior
     font-weight: 700;
     color: var(--ion-color-primary-shade);
   }
@@ -208,16 +215,30 @@ ion-card {
   .action-buttons {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px; // Um pouco mais de espaço entre os botões
 
     ion-button {
-      --border-radius: 6px;
-      height: 48px;
+      --border-radius: $card-border-radius; // Consistência nas bordas
+      height: 50px; // Botões maiores para melhor toque
       font-weight: 500;
+      text-transform: none; // Remove uppercase padrão, se desejado
     }
   }
 }
 
 // =======================================
-// Fim
+// Ajustes Globais para MatFormField (Opcional, para consistência)
 // =======================================
+// Se quiser que todos os mat-form-field (outline) tenham uma aparência similar
+// :host ::ng-deep .mat-mdc-form-field-flex {
+//   align-items: center !important; // Centraliza o conteúdo do campo verticalmente
+// }
+
+// :host ::ng-deep .mat-mdc-text-field-wrapper.mdc-text-field--outlined .mat-mdc-form-field-infix {
+//   padding-top: 12px !important; // Ajusta padding interno para o input
+//   padding-bottom: 12px !important;
+// }
+
+// :host ::ng-deep .mat-mdc-floating-label.mdc-floating-label {
+//    top: 18px !important; // Ajusta posição do label flutuante
+// }
